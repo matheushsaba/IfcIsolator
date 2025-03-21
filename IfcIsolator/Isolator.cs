@@ -5,7 +5,7 @@ using Xbim.IO;
 
 namespace IfcIsolator
 {
-    public static class IfcIsolator
+    public static class Isolator
     {
         const string IFC_FILE_EXTENSION = ".ifc";
         const string OUTPUT_FILE_SUFFIX = "_Isolated";

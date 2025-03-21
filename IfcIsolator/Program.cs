@@ -24,7 +24,7 @@
                 .ToArray();
 
             // Now call into your IfcSplitter logic
-            IfcIsolator.SplitByEntityLabels(inputPath, outputPath, entityLabels);
+            Isolator.SplitByEntityLabels(inputPath, outputPath, entityLabels);
         }
     }
 }
