@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.Ifc4.Interfaces;
@@ -26,8 +27,9 @@ namespace Xbim.Ifc
         /// if you are going to insert products from multiple source models or if you are going to insert products to a non-empty model</param>
         /// <param name="mappings">Mappings to avoid multiple insertion of objects. Keep a single instance for insertion between two models.
         /// If you also use InsertCopy() function for some other insertions, use the same instance of mappings.</param>
-        public static void InsertCopy(this IModel model, IEnumerable<IIfcProduct> products, bool includeGeometry, bool keepLabels, 
-            XbimInstanceHandleMap mappings)
+        /// <param name="acceptIsolatedSpatialElements">Accept isolated spatial elements to make a copy of their hierarchy.</param>
+        public static void InsertCopy(this IModel model, IEnumerable<IIfcProduct> products, bool includeGeometry, bool keepLabels,
+            XbimInstanceHandleMap mappings, bool acceptIsolatedSpatialElements = false)
         {
             var context = new CopyContext
             {
@@ -44,17 +46,18 @@ namespace Xbim.Ifc
                 //don't do anything if the source and target are the same
                 return;
 
-            var toInsert = GetEntitiesToInsert(context, source, roots);
+            var toInsert = GetEntitiesToInsert(context, source, roots, acceptIsolatedSpatialElements);
             //create new cache is none is defined
             var cache = mappings ?? new XbimInstanceHandleMap(source, model);
 
             foreach (var entity in toInsert)
-                model.InsertCopy(entity, cache, 
-                    (property, obj) => Filter(context, property, obj), 
+                model.InsertCopy(entity, cache,
+                    (property, obj) => Filter(context, property, obj),
                     true, keepLabels);
         }
 
-        private static IEnumerable<IPersistEntity> GetEntitiesToInsert(CopyContext context, IModel model, List<IPersistEntity> roots)
+        private static IEnumerable<IPersistEntity> GetEntitiesToInsert(CopyContext context, IModel model, List<IPersistEntity> roots,
+            bool acceptIsolatedSpatialElements)
         {
             context.PrimaryElements = roots.OfType<IIfcProduct>().ToList();
 
@@ -73,6 +76,15 @@ namespace Xbim.Ifc
                     r => context.PrimaryElements.Any(e => r.RelatedElements.Contains(e))).ToList();
             var bottomSpatialHierarchy =
                 spatialRels.Select(r => r.RelatingStructure).Union(spatialRefs.Select(r => r.RelatingStructure)).ToList();
+
+            if (acceptIsolatedSpatialElements)
+            {
+                // If the user explicitly gave us a spatial element (storey, building, etc.) as a root,
+                // treat it as though it was part of bottomSpatialHierarchy
+                var rootSpatial = roots.OfType<IIfcSpatialElement>().ToList();
+                bottomSpatialHierarchy.AddRange(rootSpatial);
+            }
+
             var spatialAggregations = GetUpstreamHierarchy(bottomSpatialHierarchy, model).ToList();
 
             //add all spatial elements from bottom and from upstream hierarchy
