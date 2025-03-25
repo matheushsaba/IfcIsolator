@@ -35,7 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.Essentials.Tests", "Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.Essentials.NetCore.Tests", "Xbim.Essentials.NetCore.Tests\Xbim.Essentials.NetCore.Tests.csproj", "{811CAF14-92CF-47C1-8556-147887BA29E0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IfcIsolator", "IfcIsolator\IfcIsolator.csproj", "{29EC47AA-621D-4F4F-9201-B34EDAD98868}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IfcIsolatorTerminal", "IfcIsolator\IfcIsolatorTerminal.csproj", "{29EC47AA-621D-4F4F-9201-B34EDAD98868}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IfcIsolatorTests", "IfcIsolatorTests\IfcIsolatorTests.csproj", "{044BA75E-5498-47D5-A17B-AA742AA1AB7C}"
 EndProject
