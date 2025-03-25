@@ -8,6 +8,7 @@
 // ------------------------------------------------------------------------------
 
 using Xbim.Common;
+using Xbim.Ifc2x3.Interfaces;
 //## Custom using statements
 //##
 
@@ -15,7 +16,7 @@ namespace Xbim.Ifc2x3.GeometryResource
 {
     // ReSharper disable once InconsistentNaming
     // ReSharper disable once PartialTypeWithSinglePart
-	public partial interface IfcTrimmingSelect : IExpressSelectType
+	public partial interface IfcTrimmingSelect : IIfcTrimmingSelect
 	{
 		#region Custom code for a select
 		//## Custom code for a select
@@ -24,3 +25,13 @@ namespace Xbim.Ifc2x3.GeometryResource
 	}
 }
 
+namespace Xbim.Ifc2x3.Interfaces
+{
+	public partial interface IIfcTrimmingSelect : IExpressSelectType
+	{
+		#region Custom code for a select interface
+		//## Custom code for a select interface
+		//##
+		#endregion
+	}
+}

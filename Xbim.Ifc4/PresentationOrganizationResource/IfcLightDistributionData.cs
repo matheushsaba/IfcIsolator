@@ -53,6 +53,7 @@ namespace Xbim.Ifc4.PresentationOrganizationResource
 		IItemSet<IfcLuminousIntensityDistributionMeasure> IIfcLightDistributionData.LuminousIntensity { 
 			get { return @LuminousIntensity; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

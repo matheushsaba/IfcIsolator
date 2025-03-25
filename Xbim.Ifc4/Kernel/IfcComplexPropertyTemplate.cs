@@ -53,6 +53,7 @@ namespace Xbim.Ifc4.Kernel
 		IItemSet<IIfcPropertyTemplate> IIfcComplexPropertyTemplate.HasPropertyTemplates { 
 			get { return new Common.Collections.ProxyItemSet<IfcPropertyTemplate, IIfcPropertyTemplate>( @HasPropertyTemplates); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

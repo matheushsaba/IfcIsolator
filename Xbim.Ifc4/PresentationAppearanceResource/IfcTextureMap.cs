@@ -48,6 +48,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 			get { return @MappedTo; } 
 			set { MappedTo = value as IfcFace;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -58,6 +58,7 @@ namespace Xbim.Ifc4.ExternalReferenceResource
 			get { return @ReferencedLibrary; } 
 			set { ReferencedLibrary = value as IfcLibraryInformation;}
 		}	
+		 
 		IEnumerable<IIfcRelAssociatesLibrary> IIfcLibraryReference.LibraryRefForObjects {  get { return @LibraryRefForObjects; } }
 		#endregion
 

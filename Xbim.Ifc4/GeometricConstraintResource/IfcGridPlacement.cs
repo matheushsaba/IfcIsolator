@@ -50,6 +50,7 @@ namespace Xbim.Ifc4.GeometricConstraintResource
 			get { return @PlacementRefDirection; } 
 			set { PlacementRefDirection = value as IfcGridPlacementDirectionSelect;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

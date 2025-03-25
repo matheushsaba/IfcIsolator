@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.TopologyResource
 	public  partial class @IfcAdvancedFace : IfcFaceSurface, IInstantiableEntity, IIfcAdvancedFace, IContainsEntityReferences, IEquatable<@IfcAdvancedFace>
 	{
 		#region IIfcAdvancedFace explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

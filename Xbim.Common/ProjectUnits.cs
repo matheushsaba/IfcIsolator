@@ -5,8 +5,6 @@
     /// </summary>
     public enum ProjectUnits
     {
-		SIUnitsUK,
-		ImperialUnits,
-		USCustomaryUnits
-	}
+        SIUnitsUK
+    }
 }

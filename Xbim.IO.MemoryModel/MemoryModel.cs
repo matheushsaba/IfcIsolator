@@ -7,8 +7,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Xbim.Common;
-using Xbim.Common.Configuration;
-using Xbim.Common.Exceptions;
 using Xbim.Common.Model;
 using Xbim.Common.Step21;
 using Xbim.Ifc4.Interfaces;
@@ -65,7 +63,6 @@ namespace Xbim.IO.Memory
                                 {
                                     case XmlSchemaVersion.Ifc2x3:
                                         return XbimSchemaVersion.Ifc2X3;
-                                    case XmlSchemaVersion.Ifc4Add2:
                                     case XmlSchemaVersion.Ifc4Add1:
                                     case XmlSchemaVersion.Ifc4:
                                         return XbimSchemaVersion.Ifc4;
@@ -98,10 +95,12 @@ namespace Xbim.IO.Memory
                     {
                         case XmlSchemaVersion.Ifc2x3:
                             return XbimSchemaVersion.Ifc2X3;
+
                         case XmlSchemaVersion.Ifc4Add1:
                         case XmlSchemaVersion.Ifc4Add2:
                         case XmlSchemaVersion.Ifc4:
                             return XbimSchemaVersion.Ifc4;
+
                         case XmlSchemaVersion.Unknown:
                         default:
                             return XbimSchemaVersion.Unsupported;
@@ -117,17 +116,12 @@ namespace Xbim.IO.Memory
         {
             foreach (var schema in schemas)
             {
-                if (schema.StartsWith("Ifc4x3", StringComparison.OrdinalIgnoreCase))
-                    return XbimSchemaVersion.Ifc4x3;
-                if (string.Compare(schema, "Ifc4", StringComparison.OrdinalIgnoreCase) == 0 ||
-                    schema.StartsWith("Ifc4RC", StringComparison.OrdinalIgnoreCase))
+                if (string.Compare(schema, "Ifc4", StringComparison.OrdinalIgnoreCase) == 0)
                     return XbimSchemaVersion.Ifc4;
                 if (string.Equals(schema, "Ifc4x1", StringComparison.OrdinalIgnoreCase))
                     return XbimSchemaVersion.Ifc4x1;
                 if (schema.StartsWith("Ifc2x", StringComparison.OrdinalIgnoreCase)) //return this as 2x3
                     return XbimSchemaVersion.Ifc2X3;
-                if (schema.StartsWith("Ifc4x3", StringComparison.OrdinalIgnoreCase)) //return this as 2x3
-                    return XbimSchemaVersion.Ifc4x3;
                 if (schema.StartsWith("Cobie2X4", StringComparison.OrdinalIgnoreCase)) //return this as Cobie
                     return XbimSchemaVersion.Cobie2X4;
             }
@@ -138,16 +132,17 @@ namespace Xbim.IO.Memory
         {
             return GetStepFileXbimSchemaVersion(GetStepFileSchemaVersion(stream));
         }
-        public MemoryModel(IEntityFactory entityFactory, IStepFileHeader header, ILoggerFactory loggerFactory = default) : base(entityFactory, loggerFactory, 0)
+        public MemoryModel(IEntityFactory entityFactory, IStepFileHeader header) : base(entityFactory, 0) 
         {
             Header = header;
         }
-        public MemoryModel(IEntityFactory entityFactory, ILoggerFactory loggerFactory = default, int labelFrom = 0) : base(entityFactory, loggerFactory, labelFrom) { }
+        public MemoryModel(IEntityFactory entityFactory, int labelFrom) : base(entityFactory, labelFrom) { }
 
-        [Obsolete("Prefer ILoggerFactory implementation")]
-        public MemoryModel(IEntityFactory entityFactory, ILogger logger, int labelFrom) : base(entityFactory, logger, labelFrom) { }
+        public MemoryModel(IEntityFactory entityFactory) : this(entityFactory, 0) { }
 
-        private MemoryModel(EntityFactoryResolverDelegate resolver, ILoggerFactory loggerFactory, int labelFrom = 0) : base(resolver, loggerFactory, labelFrom) { }
+        public MemoryModel(IEntityFactory entityFactory, ILogger logger = null, int labelFrom = 0) : base(entityFactory, logger, labelFrom) { }
+
+        private MemoryModel(EntityFactoryResolverDelegate resolver, ILogger logger = null, int labelFrom = 0) : base(resolver, logger, labelFrom) { }
 
         public virtual void LoadXml(string path, ReportProgressDelegate progDelegate = null)
         {
@@ -171,7 +166,7 @@ namespace Xbim.IO.Memory
             }
             else
             {
-                var xmlReader = new XbimXmlReader4(GetOrCreateXMLEntity, entity => { }, Metadata, _loggerFactory);
+                var xmlReader = new XbimXmlReader4(GetOrCreateXMLEntity, entity => { }, Metadata, Logger);
                 if (progDelegate != null) xmlReader.ProgressStatus += progDelegate;
                 Header = xmlReader.Read(stream, this);
                 if (progDelegate != null) xmlReader.ProgressStatus -= progDelegate;
@@ -248,36 +243,29 @@ namespace Xbim.IO.Memory
             }
         }
 
-        
+        public static MemoryModel OpenRead(string fileName, ReportProgressDelegate progressDel)
+        {
+            return OpenRead(fileName, null, progressDel);
+        }
         public static MemoryModel OpenRead(string fileName)
         {
-            return OpenRead(fileName, null);
+            return OpenRead(fileName, null, null);
         }
-
-        [Obsolete("Prefer ILogger injection")]
         public static MemoryModel OpenRead(string fileName, ILogger logger, ReportProgressDelegate progressDel = null)
-        { 
-            return OpenRead(fileName, progressDel);  
-        }
-
-
-
-        public static MemoryModel OpenRead(string fileName, ReportProgressDelegate progressDel = null)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
             //step21 text file can resolve version in parser
             if (fileName.IsStepTextFile())
             {
                 using (var file = File.OpenRead(fileName))
                 {
-                    return OpenReadStep21(file, progressDel);
+                    return OpenReadStep21(file, logger, progressDel);
                 }
             }
 
             var version = GetSchemaVersion(fileName); //an exception is thrown if this fails
             var ef = GetFactory(version);
 
-            var model = new MemoryModel(ef, loggerFactory);
+            var model = new MemoryModel(ef, logger);
 
             if (fileName.IsStepZipFile())
                 model.LoadZip(fileName, progressDel);
@@ -298,8 +286,6 @@ namespace Xbim.IO.Memory
                     return new Ifc4.EntityFactoryIfc4();
                 case XbimSchemaVersion.Ifc4x1:
                     return new Ifc4.EntityFactoryIfc4x1();
-                case XbimSchemaVersion.Ifc4x3:
-                    return new Ifc4x3.EntityFactoryIfc4x3Add2();
                 case XbimSchemaVersion.Ifc2X3:
                     return new Ifc2x3.EntityFactoryIfc2x3();
                 case XbimSchemaVersion.Cobie2X4:
@@ -310,34 +296,18 @@ namespace Xbim.IO.Memory
         }
 
         /// <summary>
-        /// Reads schema version from the file on the fly inside the parser so it doesn't need to
+        /// Reads schema version fron the file on the fly inside the parser so it doesn't need to
         /// access the file twice.
         /// </summary>
         /// <param name="file">Input step21 text file</param>
         /// <param name="logger">Logger</param>
         /// <param name="progressDel">Progress delegate</param>
         /// <returns>New memory model</returns>
-        [Obsolete("Passing of ILogger is redundant. Use XbimServices")]
-        public static MemoryModel OpenReadStep21(string file, ILogger logger, ReportProgressDelegate progressDel = null)
+        public static MemoryModel OpenReadStep21(string file, ILogger logger = null, ReportProgressDelegate progressDel = null)
         {
             using (var stream = File.OpenRead(file))
             {
-                return OpenReadStep21(stream, progressDel);
-            }
-        }
-
-        /// <summary>
-        /// Reads schema version from the file on the fly inside the parser so it doesn't need to
-        /// access the file twice.
-        /// </summary>
-        /// <param name="file">Input step21 text file</param>
-        /// <param name="progressDel">Progress delegate</param>
-        /// <returns>New memory model</returns>
-        public static MemoryModel OpenReadStep21(string file, ReportProgressDelegate progressDel = null)
-        {
-            using (var stream = File.OpenRead(file))
-            {
-                return OpenReadStep21(stream, progressDel);
+                return OpenReadStep21(stream, logger, progressDel);
             }
         }
 
@@ -352,47 +322,20 @@ namespace Xbim.IO.Memory
         /// <param name="allowMissingReferences">Allow referenced entities that are not in the model, default false</param>
         /// <param name="keepOrder">When true, serialised file will maintain order of entities from the original file (or order of creation)</param>
         /// <returns>New memory model</returns>
-        [Obsolete("Prefer ILogger injection")]
-        public static MemoryModel OpenReadStep21(Stream stream, ILogger logger, ReportProgressDelegate progressDel = null,
+        public static MemoryModel OpenReadStep21(Stream stream, ILogger logger = null, ReportProgressDelegate progressDel = null,
            IEnumerable<string> ignoreTypes = null, bool allowMissingReferences = false, bool keepOrder = true)
         {
-            return OpenReadStep21(stream, progressDel, ignoreTypes, allowMissingReferences, keepOrder);
-        }
-
-        /// <summary>
-        /// Reads schema version from the stream on the fly inside the parser so it doesn't need to
-        /// access the file twice.
-        /// </summary>
-        /// <param name="stream">Input stream for step21 text file</param>
-        /// <param name="progressDel">Progress delegate</param>
-        /// <param name="ignoreTypes">A list of ifc types to skip</param>
-        /// <param name="allowMissingReferences">Allow referenced entities that are not in the model, default false</param>
-        /// <param name="keepOrder">When true, serialised file will maintain order of entities from the original file (or order of creation)</param>
-        /// <returns>New memory model</returns>
-        public static MemoryModel OpenReadStep21(Stream stream, ReportProgressDelegate progressDel = null,
-           IEnumerable<string> ignoreTypes = null, bool allowMissingReferences = false, bool keepOrder = true)
-        {
-
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
             var model = new MemoryModel((IEnumerable<string> schemas) =>
             {
                 var schema = GetStepFileXbimSchemaVersion(schemas);
-                if(schema == XbimSchemaVersion.Unsupported)
-                {
-                    throw new XbimParserException("IFC Schema could not be read from Header");
-                }
                 return GetFactory(schema);
-            }, loggerFactory)
+            }, logger)
             {
                 AllowMissingReferences = allowMissingReferences
             };
             if (!keepOrder)
                 model.DiscardNaturalOrder();
-            long len = -1;
-            if(stream.CanSeek)
-                len = stream.Length;
-              
-            model.LoadStep21(stream, len, progressDel, ignoreTypes);
+            model.LoadStep21(stream, stream.Length, progressDel, ignoreTypes);
             return model;
         }
 
@@ -446,15 +389,14 @@ namespace Xbim.IO.Memory
                         var mu = cbUnit.ConversionFactor;
                         if (mu.UnitComponent is IIfcSIUnit component)
                             siUnit = component;
-                        if (mu.ValueComponent is IExpressValueType et)
-                        {
-                            if (et.UnderlyingSystemType == typeof(double))
-                                value *= (double) et.Value;
-                            else if (et.UnderlyingSystemType == typeof(int))
-                                value *= (int) et.Value;
-                            else if (et.UnderlyingSystemType == typeof(long))
-                                value *= (long) et.Value;
-                        }
+                        var et = ((IExpressValueType)mu.ValueComponent);
+
+                        if (et.UnderlyingSystemType == typeof(double))
+                            value *= (double)et.Value;
+                        else if (et.UnderlyingSystemType == typeof(int))
+                            value *= (int)et.Value;
+                        else if (et.UnderlyingSystemType == typeof(long))
+                            value *= (long)et.Value;
                     }
                     if (siUnit == null) continue;
                     value *= siUnit.Power;
@@ -483,7 +425,6 @@ namespace Xbim.IO.Memory
                 break;
             }
             //sort out precision, esp for some legacy models
-            if (defaultPrecision < 1e-7) //sometimes found in old revit models where the precision should really be 1e-5
             if (defaultPrecision < 1e-7) //sometimes found in old revit models where the precision should really be 1e-5
                 defaultPrecision = 1e-5;
            // defaultPrecision *= 1.1; //this fixes errors where things are nearly coincidental like faces

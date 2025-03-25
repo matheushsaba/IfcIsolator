@@ -55,6 +55,7 @@ namespace Xbim.Ifc4.RepresentationResource
 		IItemSet<IIfcRepresentation> IIfcProductRepresentation.Representations { 
 			get { return new Common.Collections.ProxyItemSet<IfcRepresentation, IIfcRepresentation>( @Representations); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

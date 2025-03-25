@@ -41,6 +41,7 @@ namespace Xbim.Ifc4.GeometricModelResource
 		IItemSet<IfcInteger> IIfcTriangulatedIrregularNetwork.Flags { 
 			get { return @Flags; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

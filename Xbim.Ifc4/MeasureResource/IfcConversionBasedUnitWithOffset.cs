@@ -42,6 +42,7 @@ namespace Xbim.Ifc4.MeasureResource
 			get { return @ConversionOffset; } 
 			set { ConversionOffset = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

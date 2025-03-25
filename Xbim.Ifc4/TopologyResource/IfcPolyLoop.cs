@@ -41,6 +41,7 @@ namespace Xbim.Ifc4.TopologyResource
 		IItemSet<IIfcCartesianPoint> IIfcPolyLoop.Polygon { 
 			get { return new Common.Collections.ProxyItemSet<IfcCartesianPoint, IIfcCartesianPoint>( @Polygon); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -72,6 +72,7 @@ namespace Xbim.Ifc4.UtilityResource
 			get { return @ReferencePath; } 
 			set { ReferencePath = value as IfcReference;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

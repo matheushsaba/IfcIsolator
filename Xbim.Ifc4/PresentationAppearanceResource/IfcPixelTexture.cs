@@ -59,6 +59,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 		IItemSet<IfcBinary> IIfcPixelTexture.Pixel { 
 			get { return @Pixel; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

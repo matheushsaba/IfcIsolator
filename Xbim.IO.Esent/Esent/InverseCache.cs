@@ -37,8 +37,6 @@ namespace Xbim.IO.Esent
 
         public int Size => _cache.Count;
 
-        public bool IsDisposed => _disposed;
-
         public void Dispose()
         {
             if (_disposed)

@@ -50,6 +50,7 @@ namespace Xbim.Ifc4.ConstructionMgmtDomain
 			get { return @BaseQuantity; } 
 			set { BaseQuantity = value as IfcPhysicalQuantity;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

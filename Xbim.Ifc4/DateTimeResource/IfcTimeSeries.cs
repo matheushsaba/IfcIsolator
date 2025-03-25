@@ -92,6 +92,7 @@ namespace Xbim.Ifc4.DateTimeResource
 			get { return @Unit; } 
 			set { Unit = value as IfcUnit;}
 		}	
+		 
 		IEnumerable<IIfcExternalReferenceRelationship> IIfcTimeSeries.HasExternalReference {  get { return @HasExternalReference; } }
 		#endregion
 

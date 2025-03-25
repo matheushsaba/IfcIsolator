@@ -77,6 +77,7 @@ namespace Xbim.Ifc4.SharedFacilitiesElements
 			get { return @OriginalValue; } 
 			set { OriginalValue = value as IfcCostValue;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

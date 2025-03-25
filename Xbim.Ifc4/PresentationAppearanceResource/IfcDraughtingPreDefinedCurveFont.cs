@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 	public  partial class @IfcDraughtingPreDefinedCurveFont : IfcPreDefinedCurveFont, IInstantiableEntity, IIfcDraughtingPreDefinedCurveFont, IEquatable<@IfcDraughtingPreDefinedCurveFont>
 	{
 		#region IIfcDraughtingPreDefinedCurveFont explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

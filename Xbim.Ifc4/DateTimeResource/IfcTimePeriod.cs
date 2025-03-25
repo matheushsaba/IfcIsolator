@@ -50,6 +50,7 @@ namespace Xbim.Ifc4.DateTimeResource
 			get { return @EndTime; } 
 			set { EndTime = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

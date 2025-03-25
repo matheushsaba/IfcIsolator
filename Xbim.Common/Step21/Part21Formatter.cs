@@ -21,7 +21,7 @@ namespace Xbim.IO.Step21
 {
     public class Part21Formatter : IFormatProvider, ICustomFormatter
     {
-        private static readonly CultureInfo _cInfo = new CultureInfo("en-US", false);
+        private static readonly CultureInfo _cInfo = new CultureInfo("en-US");
 
         public object GetFormat(Type formatType)
         {
@@ -35,34 +35,18 @@ namespace Xbim.IO.Step21
             if (!string.IsNullOrEmpty(fmt) && fmt.ToUpper() == "R" && arg is double)
             {
                 var dArg = (double)arg;
-                var result = dArg.ToString("R", StepText.DoubleCulture);
 
                 // if compiler flag, only then do the following 3 lines
-
-                //var rDoubleStr = dArg.ToString("R", StepText.DoubleCulture);
-                //var fixedDbl = double.Parse(rDoubleStr, StepText.DoubleCulture);
-                //var result = fixedDbl.ToString("R", StepText.DoubleCulture);
+          
+                var rDoubleStr = dArg.ToString("R", StepText.DoubleCulture);
+                var fixedDbl = double.Parse(rDoubleStr, StepText.DoubleCulture);
+                var result = fixedDbl.ToString("R", StepText.DoubleCulture);
 
                 //decimal decArg = new Decimal(dArg);                                
                 // string result = decArg.ToString().ToUpper();
                 // string result = string.Format("{0:e22}", arg);
                 //string result = dArg.ToString("R", CultureInfo.CreateSpecificCulture("en-US"));
                 if (result.Contains(".")) return result;
-
-                if (result.Contains("E"))
-                    result = result.Replace("E", ".E");
-                else
-                    result += ".";
-
-                return result;
-            }
-            if (!string.IsNullOrEmpty(fmt) && fmt.ToUpper() == "G17" && arg is double)
-            {
-                var dArg = (double)arg;
-                var result = dArg.ToString("G17", StepText.DoubleCulture); 
-
-                if (result.Contains(".")) 
-                    return result;
 
                 if (result.Contains("E"))
                     result = result.Replace("E", ".E");

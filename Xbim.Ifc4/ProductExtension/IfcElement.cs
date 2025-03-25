@@ -58,6 +58,7 @@ namespace Xbim.Ifc4.ProductExtension
 			get { return @Tag; } 
 			set { Tag = value;}
 		}	
+		 
 		IEnumerable<IIfcRelFillsElement> IIfcElement.FillsVoids {  get { return @FillsVoids; } }
 		IEnumerable<IIfcRelConnectsElements> IIfcElement.ConnectedTo {  get { return @ConnectedTo; } }
 		IEnumerable<IIfcRelInterferesElements> IIfcElement.IsInterferedByElements {  get { return @IsInterferedByElements; } }

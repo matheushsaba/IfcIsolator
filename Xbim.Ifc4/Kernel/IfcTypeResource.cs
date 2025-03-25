@@ -56,6 +56,7 @@ namespace Xbim.Ifc4.Kernel
 			get { return @ResourceType; } 
 			set { ResourceType = value;}
 		}	
+		 
 		IEnumerable<IIfcRelAssignsToResource> IIfcTypeResource.ResourceOf {  get { return @ResourceOf; } }
 		#endregion
 

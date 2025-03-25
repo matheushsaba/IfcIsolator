@@ -52,6 +52,7 @@ namespace Xbim.Ifc4.StructuralAnalysisDomain
 			get { return @GlobalOrLocal; } 
 			set { GlobalOrLocal = value;}
 		}	
+		 
 		IEnumerable<IIfcRelConnectsStructuralActivity> IIfcStructuralActivity.AssignedToStructuralItem {  get { return @AssignedToStructuralItem; } }
 		#endregion
 

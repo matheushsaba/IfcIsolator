@@ -9,18 +9,15 @@ using Xbim.Common;
 using Xbim.Common.Exceptions;
 using Xbim.Common.Federation;
 using Xbim.Common.Geometry;
-using Xbim.Common.Configuration;
 using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
-using System.Runtime.InteropServices;
 
 namespace Xbim.IO.Esent
 {
     /// <summary>
     /// IModel implementation for Esent DB based model support
     /// </summary>
-    /// <remarks>Esent is a data storage system deployed automatically on Microsoft Windows machines.
-    /// Consequently this IModel is only supported on Windows Operating Systems</remarks>
+
     public class EsentModel : IModel, IFederatedModel, IDisposable
     {
         #region Fields
@@ -70,21 +67,10 @@ namespace Xbim.IO.Esent
             protected set;
         }
 
-        /// <summary>
-        /// Constructs a new <see cref="EsentModel"/>
-        /// </summary>
-        /// <param name="factory"></param>
-        public EsentModel(IEntityFactory factory) : this(factory, default(ILoggerFactory))
-        {
-        }
 
-        /// <summary>
-        /// Constructs a new <see cref="EsentModel"/>
-        /// </summary>
-        /// <param name="factory"></param>
-        /// <param name="loggerFactory"></param>
-        public EsentModel(IEntityFactory factory, ILoggerFactory loggerFactory) : this(loggerFactory)
+        public EsentModel(IEntityFactory factory)
         {
+            Logger = XbimLogging.CreateLogger<EsentModel>();
             Init(factory);
         }
 
@@ -92,44 +78,25 @@ namespace Xbim.IO.Esent
         /// Only inherited models can call parameter-less constructor and it is their responsibility to 
         /// call Init() as the very first thing.
         /// </summary>
-        internal EsentModel() : this(default(ILoggerFactory))
+        internal EsentModel()
         {
-        }
-
-        private EsentModel(ILoggerFactory loggerFactory)
-        {
-            _loggerFactory = loggerFactory ?? XbimServices.Current.GetLoggerFactory();
-            Logger = _loggerFactory.CreateLogger<EsentModel>();
-            if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Logger.LogCritical("Esent is Windows only and not supported on {OS}", RuntimeInformation.OSDescription);
-                throw new NotSupportedException("Esent is not supported on this operating system");
-            }
+            Logger = XbimLogging.CreateLogger<EsentModel>();
         }
 
         protected void Init(IEntityFactory factory)
         {
-            try
-            {
-
-                _factory = factory;
-                InstanceCache = new PersistedEntityInstanceCache(this, factory, _loggerFactory);
-                InstancesLocal = new XbimInstanceCollection(this);
-                var r = new Random();
-                UserDefinedId = (short)r.Next(short.MaxValue); // initialise value at random to reduce chance of duplicates
-                Metadata = ExpressMetaData.GetMetadata(factory.GetType().Module);
-                ModelFactors = new XbimModelFactors(Math.PI / 180, 1e-3, 1e-5);
-            }
-            catch(Exception ex)
-            {
-                Logger.LogError(ex, "Failed to Initialise EsentModel");
-                throw;
-            }
+            _factory = factory;
+            InstanceCache = new PersistedEntityInstanceCache(this, factory);
+            InstancesLocal = new XbimInstanceCollection(this);
+            var r = new Random();
+            UserDefinedId = (short)r.Next(short.MaxValue); // initialise value at random to reduce chance of duplicates
+            Metadata = ExpressMetaData.GetMetadata(factory.GetType().Module);
+            ModelFactors = new XbimModelFactors(Math.PI / 180, 1e-3, 1e-5);
         }
 
         public string DatabaseName
         {
-            get { return InstanceCache?.DatabaseName; }
+            get { return InstanceCache.DatabaseName; }
         }
         
         //sets or gets the Geometry Manager for this model
@@ -489,8 +456,7 @@ namespace Xbim.IO.Esent
             return true;
         }
 
-        public virtual bool CreateFrom(Stream inputStream, long streamSize, StorageType streamType, string xbimDbName, ReportProgressDelegate progDelegate = null, bool keepOpen = false, bool cacheEntities = false,
-            ILoggerFactory loggerFactory = default)
+        public virtual bool CreateFrom(Stream inputStream, long streamSize, StorageType streamType, string xbimDbName, ReportProgressDelegate progDelegate = null, bool keepOpen = false, bool cacheEntities = false)
         {
             Close();
             if (streamType.HasFlag(StorageType.IfcZip) ||
@@ -514,11 +480,11 @@ namespace Xbim.IO.Esent
         /// <returns></returns>
         static public EsentModel CreateTemporaryModel(IEntityFactory factory)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
+
             var tmpFileName = Path.GetTempFileName();
             try
             {
-                var model = new EsentModel(factory, loggerFactory);
+                var model = new EsentModel(factory);
                 model.CreateDatabase(tmpFileName);
                 model.Open(tmpFileName, XbimDBAccess.ReadWrite, true);
                 model.Header = new StepFileHeader(StepFileHeader.HeaderCreationMode.InitWithXbimDefaults, model);
@@ -554,12 +520,11 @@ namespace Xbim.IO.Esent
         /// <returns></returns>
         static public EsentModel CreateModel(IEntityFactory factory, string dbFileName, XbimDBAccess access = XbimDBAccess.ReadWrite)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
             try
             {
                 if (string.IsNullOrWhiteSpace(Path.GetExtension(dbFileName)))
                     dbFileName += ".xBIM";
-                var model = new EsentModel(factory, loggerFactory);
+                var model = new EsentModel(factory);
                 model.CreateDatabase(dbFileName);
                 model.Open(dbFileName, access);
                 model.Header = new StepFileHeader(StepFileHeader.HeaderCreationMode.InitWithXbimDefaults, model) { FileName = { Name = dbFileName } };
@@ -637,28 +602,26 @@ namespace Xbim.IO.Esent
         /// </summary>
         public virtual void Close()
         {
-           
+            var dbName = DatabaseName;
+            ModelFactors = new XbimModelFactors(Math.PI / 180, 1e-3, 1e-5);
+            Header = null;
+
+            if (_editTransactionEntityCursor != null)
+                EndTransaction();
+            if (_geometryStore != null)
+            {
+                _geometryStore.Dispose();
+                _geometryStore = null;
+            }
+            InstanceCache.Close();
+
+            //dispose any referenced models
+            foreach (var refModel in _referencedModels.Select(r => r.Model).OfType<IDisposable>())
+                refModel.Dispose();
+            _referencedModels.Clear();
+
             try //try and tidy up if required
             {
-                var dbName = DatabaseName;
-                
-                ModelFactors = new XbimModelFactors(Math.PI / 180, 1e-3, 1e-5);
-                Header = null;
-
-                if (_editTransactionEntityCursor != null)
-                    EndTransaction();
-                if (_geometryStore != null)
-                {
-                    _geometryStore.Dispose();
-                    _geometryStore = null;
-                }
-                InstanceCache?.Close();
-
-                //dispose any referenced models
-                foreach (var refModel in _referencedModels.Select(r => r.Model).OfType<IDisposable>())
-                    refModel.Dispose();
-                _referencedModels.Clear();
-
                 if (_deleteOnClose && File.Exists(dbName))
                 {
                     File.Delete(dbName);
@@ -671,11 +634,10 @@ namespace Xbim.IO.Esent
                     }
 
                 }
-                Logger.LogDebug("Closed EsentModel {dbName}", dbName);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.LogWarning(ex, "Failed to close EsentModel");
+                // ignored
             }
             _deleteOnClose = false;
         }
@@ -832,10 +794,8 @@ namespace Xbim.IO.Esent
                         Close();
                     }
                     //unmanaged, mostly esent related
-                    if (_geometryStore != null) 
-                        _geometryStore.Dispose();
-                    if (InstanceCache != null)
-                        InstanceCache.Dispose();
+                    if (_geometryStore != null) _geometryStore.Dispose();
+                    InstanceCache.Dispose();
                 }
                 catch
                 {
@@ -1094,7 +1054,6 @@ namespace Xbim.IO.Esent
 
         #region Federation 
         private readonly ReferencedModelCollection _referencedModels = new ReferencedModelCollection();
-        private readonly ILoggerFactory _loggerFactory;
         private EsentGeometryStore _geometryStore;
         private IStepFileHeader _header;
 
@@ -1177,21 +1136,18 @@ namespace Xbim.IO.Esent
 
         public static IStepFileHeader GetStepFileHeader(string fileName)
         {
-            EsentModel esentModel = null;
-            EsentEntityCursor entTable = null;
+            //create a temporary model
+            var esentModel = new EsentModel();
+            esentModel.InstanceCache = new PersistedEntityInstanceCache(esentModel, null);
 
+            esentModel.InstanceCache.DatabaseName = fileName;
+            IStepFileHeader header;
+            var entTable = esentModel.InstanceCache.GetEntityTable();
             try
             {
-                //create a temporary model
-                esentModel = new EsentModel();
-                esentModel.InstanceCache = new PersistedEntityInstanceCache(esentModel, null, default);
-                esentModel.InstanceCache.DatabaseName = fileName;
-
-                entTable = esentModel.InstanceCache.GetEntityTable();
                 using (entTable.BeginReadOnlyTransaction())
                 {
-                    var header = entTable.ReadHeader();
-                    return header;
+                    header = entTable.ReadHeader();
                 }
             }
             catch (Exception e)
@@ -1200,14 +1156,10 @@ namespace Xbim.IO.Esent
             }
             finally
             {
-                if (esentModel != null)
-                {
-                    if (entTable != null)
-                        esentModel.InstanceCache.FreeTable(entTable);
-
-                    esentModel.Dispose();
-                }
+                esentModel.InstanceCache.FreeTable(entTable);
+                esentModel.Dispose();
             }
+            return header;
         }
 
         public void CreateFrom(IModel model, string fileName, ReportProgressDelegate progDelegate = null)
@@ -1277,7 +1229,7 @@ namespace Xbim.IO.Esent
             get { return Factory.SchemaVersion; }
         }
 
-        protected ILogger Logger { get; set; }
+        public ILogger Logger { get; set; }
 
         public IEntityCache EntityCache => null;
     }

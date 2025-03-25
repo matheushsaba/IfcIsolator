@@ -44,6 +44,7 @@ namespace Xbim.Ifc4.Kernel
 			get { return @RelatingLibrary; } 
 			set { RelatingLibrary = value as IfcLibrarySelect;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

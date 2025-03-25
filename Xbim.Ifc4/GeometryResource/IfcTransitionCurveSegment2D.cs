@@ -67,6 +67,7 @@ namespace Xbim.Ifc4.GeometryResource
 			get { return @TransitionCurveType; } 
 			set { TransitionCurveType = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -13,17 +13,32 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Exceptions;
+using Xbim.Ifc2x3.Interfaces;
 using Xbim.Ifc2x3.GeometryResource;
 //## Custom using statements
 //##
 
+namespace Xbim.Ifc2x3.Interfaces
+{
+	/// <summary>
+    /// Readonly interface for IfcCurve
+    /// </summary>
+	// ReSharper disable once PartialTypeWithSinglePart
+	public partial interface @IIfcCurve : IIfcGeometricRepresentationItem, IfcGeometricSetSelect
+	{
+	
+	}
+}
 
 namespace Xbim.Ifc2x3.GeometryResource
 {
 	[ExpressType("IfcCurve", 68)]
 	// ReSharper disable once PartialTypeWithSinglePart
-	public abstract partial class @IfcCurve : IfcGeometricRepresentationItem, IfcGeometricSetSelect, IEquatable<@IfcCurve>
+	public abstract partial class @IfcCurve : IfcGeometricRepresentationItem, IIfcCurve, IEquatable<@IfcCurve>
 	{
+		#region IIfcCurve explicit implementation
+		 
+		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area
 		internal IfcCurve(IModel model, int label, bool activated) : base(model, label, activated)  
@@ -52,11 +67,11 @@ namespace Xbim.Ifc2x3.GeometryResource
 			    if (trimmed != null)
 			        return trimmed.BasisCurve.Dim;
 			    var composit = this as IfcCompositeCurve;
-			    if (composit != null && composit.Segments.Count > 0)
-			        return composit.Segments.Count == 1 ? composit.Segments[0].Dim : composit.Segments[1].Dim;
+			    if (composit != null)
+			        return composit.Segments[1].Dim;
 			    var bspline = this as IfcBSplineCurve;
-			    if (bspline != null && bspline.ControlPointsList.Count > 0)
-			        return bspline.ControlPointsList.Count == 1 ? bspline.ControlPointsList[0].Dim : bspline.ControlPointsList[1].Dim;
+			    if (bspline != null)
+			        return bspline.ControlPointsList[1].Dim;
 			    if (this is IfcOffsetCurve2D)
 			        return 2;
                 if (this is IfcOffsetCurve3D)

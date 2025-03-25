@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using Xbim.Common.Exceptions;
 using Xbim.Common.Geometry;
-using Xbim.Common.Configuration;
 using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
 using Xbim.IO;
@@ -19,14 +17,11 @@ namespace Xbim.Common.Model
 {
     public class StepModel : IModel, IDisposable
     {
-        protected ILogger Logger { get; private set; }
-
-        protected ILoggerFactory _loggerFactory;
+        public ILogger Logger { get; set; }
 
         public static List<string> GetStepFileSchemaVersion(Stream stream)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
-            var scanner = new Scanner(stream, loggerFactory);
+            var scanner = new Scanner(stream);
             int tok = scanner.yylex();
             int dataToken = (int)Tokens.DATA;
             int eof = (int)Tokens.EOF;
@@ -81,9 +76,9 @@ namespace Xbim.Common.Model
         public object Tag { get; set; }
         public int UserDefinedId { get; set; }
 
-        public StepModel(IEntityFactory entityFactory, ILoggerFactory loggerFactory, int labelFrom)
+        public StepModel(IEntityFactory entityFactory, int labelFrom)
         {
-            SetupLogger(loggerFactory);
+            Logger = Logger ?? XbimLogging.CreateLogger<StepModel>();
             InitFromEntityFactory(entityFactory);
 
             _instances = new EntityCollection(this, labelFrom);
@@ -96,37 +91,23 @@ namespace Xbim.Common.Model
                 Header.FileSchema.Schemas.Add(schemasId);
         }
 
-        private void SetupLogger(ILoggerFactory loggerFactory)
-        {
-            _loggerFactory = loggerFactory ?? XbimServices.Current.GetLoggerFactory();
-            Logger = _loggerFactory.CreateLogger<StepModel>();
-        }
-
-        public StepModel(IEntityFactory entityFactory, ILoggerFactory loggerFactory = default) : this(entityFactory, loggerFactory, 0)
+        public StepModel(IEntityFactory entityFactory) : this(entityFactory, 0)
         {
         }
 
-        [Obsolete("Prefer ILoggerFactory overload instead")]
-        public StepModel(IEntityFactory entityFactory, ILogger logger, int labelFrom) : this(entityFactory, default(ILoggerFactory), labelFrom)
+        public StepModel(IEntityFactory entityFactory, ILogger logger = null, int labelFrom = 0) : this(entityFactory, labelFrom)
         {
             Logger = logger ?? XbimLogging.CreateLogger<StepModel>();
         }
 
-
-        public StepModel(EntityFactoryResolverDelegate factoryResolver, ILoggerFactory loggerFactory, int labelFrom = 0)
+        public StepModel(EntityFactoryResolverDelegate factoryResolver, ILogger logger = null, int labelFrom = 0)
         {
-            SetupLogger(loggerFactory);
+            Logger = logger ?? XbimLogging.CreateLogger<StepModel>();
             _factoryResolver = factoryResolver;
             _instances = new EntityCollection(this, labelFrom);
             IsTransactional = true;
             Header = new StepFileHeader(StepFileHeader.HeaderCreationMode.LeaveEmpty, this);
             ModelFactors = new XbimModelFactors(Math.PI / 180, 1e-3, 1e-5);
-        }
-
-        [Obsolete("Prefer ILoggerFactory overload instead")]
-        public StepModel(EntityFactoryResolverDelegate factoryResolver, ILogger logger, int labelFrom) : this(factoryResolver, default(ILoggerFactory), labelFrom) 
-        {
-            Logger = Logger ?? logger ?? XbimServices.Current.ServiceProvider.GetRequiredService<ILogger<StepModel>>();
         }
 
         private void InitFromEntityFactory(IEntityFactory entityFactory)
@@ -334,7 +315,17 @@ namespace Xbim.Common.Model
             var c = InverseCache;
             if (c != null)
                 return c;
-            return InverseCache = new MemoryInverseCache(_instances);
+            return InverseCache = new MemoryInverseCache(_instances, this);
+        }
+
+        public void StopCaching()
+        {
+            var c = InverseCache;
+            if (c == null)
+                return;
+
+            c.Dispose();
+            InverseCache = null;
         }
 
         private WeakReference _cacheReference;
@@ -380,7 +371,7 @@ namespace Xbim.Common.Model
 
         public int LoadStep21Part(Stream data)
         {
-            var parser = new XbimP21Scanner(data, -1, _loggerFactory)
+            var parser = new XbimP21Scanner(data, -1)
             {
                 AllowMissingReferences = AllowMissingReferences
             };
@@ -389,7 +380,7 @@ namespace Xbim.Common.Model
 
         public int LoadStep21Part(string data)
         {
-            var parser = new XbimP21Scanner(data, _loggerFactory)
+            var parser = new XbimP21Scanner(data)
             {
                 AllowMissingReferences = AllowMissingReferences
             };
@@ -399,9 +390,8 @@ namespace Xbim.Common.Model
 
         public static IStepFileHeader LoadStep21Header(Stream stream)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
             var header = new StepFileHeader(StepFileHeader.HeaderCreationMode.LeaveEmpty, null);
-            var scanner = new XbimP21Scanner(stream, 1000, loggerFactory);
+            var scanner = new XbimP21Scanner(stream, 1000);
             
             scanner.EntityCreate += (string name, long? label, bool inHeader) =>
             {
@@ -487,11 +477,10 @@ namespace Xbim.Common.Model
                 else
                 {
                     var msg = $"Error in file at label {label} for type {name}.";
-                    var expressType = Metadata.ExpressType(name);
-                    if (expressType == null)
-                        msg = string.Format("Illegal element in file; cannot find type {0} at label {1}.", name, label);
-                    else if (expressType.Type.GetTypeInfo().IsAbstract)
+                    if (Metadata.ExpressType(name).Type.GetTypeInfo().IsAbstract)
+                    {
                         msg = string.Format("Illegal element in file; cannot instantiate the abstract type {0} at label {1}.", name, label);
+                    }
                     Logger?.LogError(msg);
                 }
 
@@ -502,13 +491,12 @@ namespace Xbim.Common.Model
             };
             try
             {
-                var success = parser.Parse();
-                
+                parser.Parse();
 
                 //fix header with the schema if it was not a part of the data
-                if (Header.FileSchema.Schemas.Count == 0 && EntityFactory != null)
+                if (Header.FileSchema.Schemas.Count == 0)
                 {
-                    foreach (var s in EntityFactory?.SchemasIds)
+                    foreach (var s in EntityFactory.SchemasIds)
                     {
                         Header.FileSchema.Schemas.Add(s);
                     }
@@ -539,21 +527,11 @@ namespace Xbim.Common.Model
                 if (sid == null)
                 {
                     //add in a bit of flexibility for old Ifc models with weird schema names
-                    var ifc2xSchemaNamesThatAreOK = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "IFC2X_FINAL", "IFC2X2_FINAL", "IFC2X2", "IFC2X4_RC3" };
-                    var ifc4x3SchemaNamesThatAreOK = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "IFC4X3_RC2", "IFC4X3_RC4", "IFC4X3", "IFC4X3_ADD1" };
-                    if (ifc2xSchemaNamesThatAreOK.Contains(id))
-                    {
-                        sid = EntityFactory.SchemasIds.FirstOrDefault(s => string.Equals(s, "IFC2X3", StringComparison.OrdinalIgnoreCase));
-                    }
-                    else if (ifc4x3SchemaNamesThatAreOK.Contains(id))
-                    {
-                        sid = EntityFactory.SchemasIds.FirstOrDefault(s => s.StartsWith("IFC4X3", StringComparison.OrdinalIgnoreCase));
-                    }
+                    var old2xSchemaNamesThatAreOK = new[] { "IFC2X_FINAL", "IFC2X2_FINAL", "IFC2X2" };
+                    if(old2xSchemaNamesThatAreOK.FirstOrDefault(s => string.Equals(s, id, StringComparison.OrdinalIgnoreCase))==null)
+                        throw new XbimParserException("Mismatch between schema defined in the file and schemas available in the data model.");
                     else
-                    {
-                        var available = string.Concat(", ", EntityFactory.SchemasIds);
-                        throw new XbimParserException($"Mismatch between schema '{id}' defined in the file and schemas available in the entity factory [{available}].");
-                    }
+                        sid = EntityFactory.SchemasIds.FirstOrDefault(s => string.Equals(s, "IFC2X3", StringComparison.OrdinalIgnoreCase));
                 }
                 //if the case is different set it to the one from entity factory
                 if (id != sid)
@@ -573,7 +551,7 @@ namespace Xbim.Common.Model
         /// <returns>Number of errors in parsing. Always check this to be null or the model might be incomplete.</returns>
         public virtual int LoadStep21(Stream stream, long streamSize, ReportProgressDelegate progDelegate = null, IEnumerable<string> ignoreTypes = null)
         {
-            var parser = new XbimP21Scanner(stream, streamSize, _loggerFactory, ignoreTypes)
+            var parser = new XbimP21Scanner(stream, streamSize, ignoreTypes)
             {
                 AllowMissingReferences = AllowMissingReferences
             };
@@ -635,6 +613,11 @@ namespace Xbim.Common.Model
         /// </summary>
         protected virtual void Dispose(bool native)
         {
+
+        }
+
+        public void Dispose()
+        {
             _instances.Dispose();
             _transactionReference = null;
             _cacheReference = null;
@@ -647,10 +630,7 @@ namespace Xbim.Common.Model
             _newEntityHandlers.Clear();
             _modifiedEntityHandlers.Clear();
             _deletedEntityHandlers.Clear();
-        }
 
-        public void Dispose()
-        {
             Dispose(true);
             GC.SuppressFinalize(this);
             return;

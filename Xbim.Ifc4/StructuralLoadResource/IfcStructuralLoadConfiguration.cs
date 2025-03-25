@@ -45,6 +45,7 @@ namespace Xbim.Ifc4.StructuralLoadResource
 		IItemSet<IItemSet<IfcLengthMeasure>> IIfcStructuralLoadConfiguration.Locations { 
 			get { return @Locations; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

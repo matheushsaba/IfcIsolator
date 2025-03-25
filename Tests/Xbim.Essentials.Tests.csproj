@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48</TargetFrameworks>
+    <TargetFrameworks>net47</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <DebugType>Full</DebugType>
     <Description>Unit Tests for XBIM.Essentials</Description>
@@ -26,21 +26,15 @@
     <EmbeddedResource Remove="TestResults\**" />
     <None Remove="Debug\**" />
     <None Remove="TestResults\**" />
-    <None Update="TestFiles\IFC4x3_ADD2\PlacmentOfSignal.ifc">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -50,7 +44,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Xbim.Common\Xbim.Common.csproj" />
     <ProjectReference Include="..\Xbim.Ifc2x3\Xbim.Ifc2x3.csproj" />
-    <ProjectReference Include="..\Xbim.Ifc4x3\Xbim.Ifc4x3.csproj" />
     <ProjectReference Include="..\Xbim.Ifc4\Xbim.Ifc4.csproj" />
     <ProjectReference Include="..\Xbim.Ifc\Xbim.Ifc.csproj" />
     <ProjectReference Include="..\Xbim.IO.Esent\Xbim.IO.Esent.csproj" />
@@ -83,11 +76,6 @@
     </None>
     <None Update="XsdSchemas\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="TestSourceFiles\IfcOpenShell-Issue2499.ifc">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

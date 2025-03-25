@@ -66,6 +66,7 @@ namespace Xbim.Ifc4.ActorResource
 		IItemSet<IfcURIReference> IIfcTelecomAddress.MessagingIDs { 
 			get { return @MessagingIDs; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -48,6 +48,7 @@ namespace Xbim.Ifc4.SharedBldgServiceElements
 			get { return @RelatingFlowElement; } 
 			set { RelatingFlowElement = value as IfcDistributionFlowElement;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

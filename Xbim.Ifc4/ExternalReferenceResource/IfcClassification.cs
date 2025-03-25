@@ -81,6 +81,7 @@ namespace Xbim.Ifc4.ExternalReferenceResource
 		IItemSet<IfcIdentifier> IIfcClassification.ReferenceTokens { 
 			get { return @ReferenceTokens; } 
 		}	
+		 
 		IEnumerable<IIfcRelAssociatesClassification> IIfcClassification.ClassificationForObjects {  get { return @ClassificationForObjects; } }
 		IEnumerable<IIfcClassificationReference> IIfcClassification.HasReferences {  get { return @HasReferences; } }
 		#endregion

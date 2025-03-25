@@ -98,7 +98,10 @@ namespace Xbim.Common.Collections
 
         public void CopyTo(TOuter[] array, int arrayIndex)
         {
-            _inner.ToArray().CopyTo(array, arrayIndex);
+            var result = new TInner[array.Length];
+            _inner.CopyTo(result, arrayIndex);
+            for (var i = 0; i < array.Length; i++)
+                array[i] = result[i];
         }
 
         public bool Remove(TOuter item)

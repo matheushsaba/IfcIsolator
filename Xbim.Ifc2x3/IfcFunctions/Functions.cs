@@ -9,7 +9,6 @@ using Xbim.Common;
 using Xbim.Common.Geometry;
 using Xbim.Ifc2x3.DateTimeResource;
 using Xbim.Ifc2x3.GeometricConstraintResource;
-using Xbim.Ifc2x3.GeometricModelResource;
 using Xbim.Ifc2x3.GeometryResource;
 using Xbim.Ifc2x3.IfcFunctions;
 using Xbim.Ifc2x3.Interfaces;
@@ -18,7 +17,6 @@ using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.PresentationAppearanceResource;
 using Xbim.Ifc2x3.PresentationDefinitionResource;
 using Xbim.Ifc2x3.PresentationDimensioningResource;
-using Xbim.Ifc2x3.PresentationOrganizationResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.ProfileResource;
 using Xbim.Ifc2x3.PropertyResource;
@@ -295,23 +293,23 @@ namespace Xbim.Ifc2x3
             {
 
                 case "Vertex":
-                    Count = Items.Count(x => x is IfcVertex);
+                    Count = Items.Count(x => x is IIfcVertex);
                     break;
 
                 case "Edge":
-                    Count = Items.Count(x => x is IfcEdge);
+                    Count = Items.Count(x => x is IIfcEdge);
                     break;
                 case "Path":
-                    Count = Items.Count(x => x is IfcPath);
+                    Count = Items.Count(x => x is IIfcPath);
                     break;
 
                 case "Face":
-                    Count = Items.Count(x => x is IfcFace);
+                    Count = Items.Count(x => x is IIfcFace);
                     break;
 
                 case "Shell":
-                    Count = Items.Count(x => x is IfcOpenShell
-                                             || x is IfcClosedShell
+                    Count = Items.Count(x => x is IIfcOpenShell
+                                             || x is IIfcClosedShell
                     );
                     break;
                 case "Undefined":
@@ -364,38 +362,38 @@ namespace Xbim.Ifc2x3
             switch (RepType.Value)
             {
                 case "Point":
-                    Count = Items.Count(x => x is IfcPoint);
+                    Count = Items.Count(x => x is IIfcPoint);
                     break;
                 //case "PointCloud":
                 //    Count = Items.Count(x => x is IIfcCartesianPointList3D);
                 //    break;
                 case "Curve":
-                    Count = Items.Count(x => x is IfcCurve);
+                    Count = Items.Count(x => x is IIfcCurve);
                     break;
                 case "Curve2D":
-                    Count = Items.Count(x => x is IfcCurve && ((IfcCurve) x).Dim == 2);
+                    Count = Items.Count(x => x is IIfcCurve && ((IIfcCurve) x).Dim == 2);
                     break;
                 case "Curve3D":
-                    Count = Items.Count(x => x is IfcCurve && ((IfcCurve) x).Dim == 3);
+                    Count = Items.Count(x => x is IIfcCurve && ((IIfcCurve) x).Dim == 3);
                     break;
 
                 case "Surface":
-                    Count = Items.Count(x => x is IfcSurface);
+                    Count = Items.Count(x => x is IIfcSurface);
                     break;
 
                 case "Surface2D":
-                    Count = Items.Count(x => x is IfcSurface && ((IfcSurface) x).Dim == 2);
+                    Count = Items.Count(x => x is IIfcSurface && ((IIfcSurface) x).Dim == 2);
                     break;
                 case "Surface3D":
-                    Count = Items.Count(x => x is IfcSurface && ((IfcSurface) x).Dim == 3);
+                    Count = Items.Count(x => x is IIfcSurface && ((IIfcSurface) x).Dim == 3);
                     break;
 
                 case "FillArea":
-                    Count = Items.Count(x => x is IfcAnnotationFillArea);
+                    Count = Items.Count(x => x is IIfcAnnotationFillArea);
                     break;
 
                 case "Text":
-                    Count = Items.Count(x => x is IfcTextLiteral);
+                    Count = Items.Count(x => x is IIfcTextLiteral);
                     break;
                 //case "AdvancedSurface":
                 //    Count = Items.Count(x => x is IIfcBSplineSurface);
@@ -403,33 +401,33 @@ namespace Xbim.Ifc2x3
 
                 case "Annotation2D":
                     Count = Items.Count(x =>
-                            x is IfcPoint
-                            || x is IfcCurve
-                            || x is IfcGeometricCurveSet
-                            || x is IfcAnnotationFillArea
-                            || x is IfcTextLiteral
+                            x is IIfcPoint
+                            || x is IIfcCurve
+                            || x is IIfcGeometricCurveSet
+                            || x is IIfcAnnotationFillArea
+                            || x is IIfcTextLiteral
                     );
                     break;
 
 
                 case "GeometricSet":
                     Count = Items.Count(x =>
-                        x is IfcGeometricSet
-                        || x is IfcPoint
-                        || x is IfcCurve
-                        || x is IfcSurface);
+                        x is IIfcGeometricSet
+                        || x is IIfcPoint
+                        || x is IIfcCurve
+                        || x is IIfcSurface);
                     break;
                 case "GeometricCurveSet":
                     Count = Items.Count(x =>
-                        x is IfcGeometricCurveSet
-                        || x is IfcGeometricSet
-                        || x is IfcPoint
-                        || x is IfcCurve);
+                        x is IIfcGeometricCurveSet
+                        || x is IIfcGeometricSet
+                        || x is IIfcPoint
+                        || x is IIfcCurve);
                     foreach (var ifcRepresentationItem in Items)
                     {
-                        if (ifcRepresentationItem is IfcGeometricSet)
+                        if (ifcRepresentationItem is IIfcGeometricSet)
                         {
-                            var asIIfcGeometricSet = ifcRepresentationItem as IfcGeometricSet;
+                            var asIIfcGeometricSet = ifcRepresentationItem as IIfcGeometricSet;
                             if (asIIfcGeometricSet.Elements.Count(temp => temp is IfcSurface) > 0)
                             {
                                 Count--;
@@ -444,67 +442,67 @@ namespace Xbim.Ifc2x3
                 case "SurfaceOrSolidModel":
                     Count = Items.Count(x =>
                             // x is IIfcTessellatedItem
-                            x is IfcShellBasedSurfaceModel
-                            || x is IfcFaceBasedSurfaceModel
-                            || x is IfcSolidModel
+                            x is IIfcShellBasedSurfaceModel
+                            || x is IIfcFaceBasedSurfaceModel
+                            || x is IIfcSolidModel
                     );
                     break;
                 case "SurfaceModel":
                     Count = Items.Count(x =>
-                            x is IfcShellBasedSurfaceModel
-                            || x is IfcFaceBasedSurfaceModel
+                            x is IIfcShellBasedSurfaceModel
+                            || x is IIfcFaceBasedSurfaceModel
                     );
                     break;
                 case "SolidModel":
-                    Count = Items.Count(x => x is IfcSolidModel);
+                    Count = Items.Count(x => x is IIfcSolidModel);
                     break;
                 case "SweptSolid":
                     // todo: check this, i'm not sure this is how to interpret the clause
                     Count = Items.Count(x =>
-                            x is IfcExtrudedAreaSolid
-                            || x is IfcRevolvedAreaSolid
+                            x is IIfcExtrudedAreaSolid
+                            || x is IIfcRevolvedAreaSolid
                             
                     );
                     break;
                 case "AdvancedSweptSolid":
                     Count = Items.Count(x =>
-                            x is IfcSweptAreaSolid
-                            || x is IfcSweptDiskSolid
+                            x is IIfcSweptAreaSolid
+                            || x is IIfcSweptDiskSolid
                     );
                     break;
                 case "CSG":
                     Count = Items.Count(x =>
-                        x is IfcBooleanResult
-                        || x is IfcCsgPrimitive3D
-                        || x is IfcCsgSolid);
+                        x is IIfcBooleanResult
+                        || x is IIfcCsgPrimitive3D
+                        || x is IIfcCsgSolid);
                     break;
                 case "Clipping":
-                    Count = Items.Count(x => x is IfcBooleanClippingResult);
+                    Count = Items.Count(x => x is IIfcBooleanClippingResult);
                     break;
 
                 case "Brep":
 
-                    Count = Items.Count(x => x is IfcFacetedBrep);
+                    Count = Items.Count(x => x is IIfcFacetedBrep);
                     break;
 
 
                 case "AdvancedBrep":
-                    Count = Items.Count(x => x is IfcManifoldSolidBrep);
+                    Count = Items.Count(x => x is IIfcManifoldSolidBrep);
                     break;
 
                 case "BoundingBox":
-                    Count = Items.Count(x => x is IfcBoundingBox);
+                    Count = Items.Count(x => x is IIfcBoundingBox);
                     if (Items.Count > 1)
                         Count = 0;
                     break;
                 case "SectionedSpine":
-                    Count = Items.Count(x => x is IfcSectionedSpine);
+                    Count = Items.Count(x => x is IIfcSectionedSpine);
                     break;
                 case "LightSource":
-                    Count = Items.Count(x => x is IfcLightSource);
+                    Count = Items.Count(x => x is IIfcLightSource);
                     break;
                 case "MappedRepresentation":
-                    Count = Items.Count(x => x is IfcMappedItem);
+                    Count = Items.Count(x => x is IIfcMappedItem);
                     break;
             }
             return Count == Items.Count;
@@ -691,7 +689,7 @@ namespace Xbim.Ifc2x3
             return true;
         }
 
-        private static bool HasIfcDimensionalExponents(IfcDimensionalExponents dim, int len, int mass, int time, int elec, int temp, int substance, int lum)
+        private static bool HasIfcDimensionalExponents(IIfcDimensionalExponents dim, int len, int mass, int time, int elec, int temp, int substance, int lum)
         {
             return
                 dim.LengthExponent == len

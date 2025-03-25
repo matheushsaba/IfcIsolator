@@ -7,7 +7,7 @@ using Xbim.IO.Parser;
 namespace Xbim.Essentials.Tests
 {
     [TestClass]
-    public class ReadingFileWithComments : TestBase
+    public class ReadingFileWithComments
     {
         [TestMethod]
         public void ScanningTheFile()
@@ -15,7 +15,7 @@ namespace Xbim.Essentials.Tests
             const string file = "TestFiles\\mapped-shape-with-transformation.ifc";
             using (var stream = File.OpenRead(file) )
             {
-                var s = new Scanner(stream, LoggerFactory);
+                var s = new Scanner(stream);
                 int t;
                 do
                 {

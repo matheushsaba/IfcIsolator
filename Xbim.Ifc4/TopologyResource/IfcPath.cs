@@ -40,6 +40,7 @@ namespace Xbim.Ifc4.TopologyResource
 		IItemSet<IIfcOrientedEdge> IIfcPath.EdgeList { 
 			get { return new Common.Collections.ProxyItemSet<IfcOrientedEdge, IIfcOrientedEdge>( @EdgeList); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

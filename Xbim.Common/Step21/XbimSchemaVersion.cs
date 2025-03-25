@@ -5,11 +5,11 @@
     /// </summary>
     public enum XbimSchemaVersion
     {
-        Unsupported = 0,
-        Ifc4 = 1,
-        Ifc4x1 = 2,
-        Ifc2X3 = 3,
-        Cobie2X4 = 4,
-        Ifc4x3 = 5
+        Unsupported,
+        Ifc4,
+        Ifc4x1,
+        Ifc2X3,
+        Cobie2X4
+
     }
 }

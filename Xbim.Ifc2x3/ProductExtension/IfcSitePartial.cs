@@ -28,7 +28,9 @@ namespace Xbim.Ifc2x3.ProductExtension
                 //if revit try their value
                 var val = GetPropertySingleValue<Ifc4.MeasureResource.IfcAreaMeasure>("PSet_Revit_Dimensions",
                     "Projected Area");
-                return val;
+                if (val != null) return val;
+
+                return null;
             }
         }
 

@@ -69,6 +69,7 @@ namespace Xbim.Ifc4.MaterialResource
 			get { return @Category; } 
 			set { Category = value;}
 		}	
+		 
 		IIfcMaterialConstituentSet IIfcMaterialConstituent.ToMaterialConstituentSet {  get { return @ToMaterialConstituentSet; } }
 		#endregion
 

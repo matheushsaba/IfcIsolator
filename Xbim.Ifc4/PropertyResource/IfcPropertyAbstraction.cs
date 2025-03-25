@@ -40,6 +40,7 @@ namespace Xbim.Ifc4.PropertyResource
 	public abstract partial class @IfcPropertyAbstraction : PersistEntity, IIfcPropertyAbstraction, IEquatable<@IfcPropertyAbstraction>
 	{
 		#region IIfcPropertyAbstraction explicit implementation
+		 
 		IEnumerable<IIfcExternalReferenceRelationship> IIfcPropertyAbstraction.HasExternalReferences {  get { return @HasExternalReferences; } }
 		#endregion
 

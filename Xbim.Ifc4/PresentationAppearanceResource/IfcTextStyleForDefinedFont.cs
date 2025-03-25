@@ -51,6 +51,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 			get { return @BackgroundColour; } 
 			set { BackgroundColour = value as IfcColour;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

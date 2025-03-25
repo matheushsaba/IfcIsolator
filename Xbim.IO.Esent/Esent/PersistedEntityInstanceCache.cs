@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,6 @@ using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 using Xbim.IO.Xml;
 using Xbim.Common.Step21;
-using Xbim.Common.Configuration;
 
 namespace Xbim.IO.Esent
 {
@@ -34,8 +34,6 @@ namespace Xbim.IO.Esent
 
         private Instance _jetInstance;
         private readonly IEntityFactory _factory;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
         private Session _session;
         private JET_DBID _databaseId;
 
@@ -95,11 +93,9 @@ namespace Xbim.IO.Esent
         private bool _caching;
         private bool _previousCaching;
 
-        public PersistedEntityInstanceCache(EsentModel model, IEntityFactory factory, ILoggerFactory loggerFactory)
+        public PersistedEntityInstanceCache(EsentModel model, IEntityFactory factory)
         {
             _factory = factory;
-            _loggerFactory = loggerFactory ?? XbimServices.Current.GetLoggerFactory();
-            _logger = _loggerFactory.CreateLogger<PersistedEntityInstanceCache>();
             _jetInstance = CreateInstance("XbimInstance");
             _lockObject = new object();
             _model = model;
@@ -129,20 +125,15 @@ namespace Xbim.IO.Esent
                     EsentCursor.CreateGlobalsTable(session, dbid); //create the gobals table
                     EnsureGeometryTables(session, dbid);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, "Failed to Create Esent Database, {filename}", fileName);
-                    try
+                    Api.JetCloseDatabase(session, dbid, CloseDatabaseGrbit.None);
+                    lock (OpenInstances)
                     {
-                        Api.JetCloseDatabase(session, dbid, CloseDatabaseGrbit.None);
-                        lock (OpenInstances)
-                        {
-                            Api.JetDetachDatabase(session, fileName);
-                            OpenInstances.Remove(this);
-                        }
-                        File.Delete(fileName);
+                        Api.JetDetachDatabase(session, fileName);
+                        OpenInstances.Remove(this);
                     }
-                    catch { }
+                    File.Delete(fileName);
                     throw;
                 }
             }
@@ -169,20 +160,18 @@ namespace Xbim.IO.Esent
                 {
                     Api.JetDeleteTable(_session, _databaseId, EsentShapeGeometryCursor.GeometryTableName);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     //
-                    _logger.LogDebug(ex, "Failed to delete geometry table {tableName}", EsentShapeGeometryCursor.GeometryTableName);
-;                }
+                }
 
                 try
                 {
                     Api.JetDeleteTable(_session, _databaseId, EsentShapeInstanceCursor.InstanceTableName);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     //
-                    _logger.LogDebug(ex, "Failed to delete geometry table {tableName}", EsentShapeInstanceCursor.InstanceTableName);
                 }
                 EnsureGeometryTables(_session, _databaseId);
             }
@@ -227,7 +216,7 @@ namespace Xbim.IO.Esent
                 }
             }
             var openMode = AttachedDatabase();
-            return new EsentEntityCursor(_model, _databaseName, openMode, _loggerFactory);  
+            return new EsentEntityCursor(_model, _databaseName, openMode);
         }
 
         private OpenDatabaseGrbit AttachedDatabase()
@@ -256,7 +245,6 @@ namespace Xbim.IO.Esent
                     }
                     catch (EsentDatabaseDirtyShutdownException)
                     {
-                        _logger.LogInformation("Dirty shutdown of Esent DB detected. Attempting repair with EsentUtl.exe");
                         // try and fix the problem with the badly shutdown database
                         var startInfo = new ProcessStartInfo("EsentUtl.exe")
                         {
@@ -276,11 +264,11 @@ namespace Xbim.IO.Esent
                                     // Give the process time to die, as we'll likely be reading files it has open next.
                                     Thread.Sleep(500);
                                 }
-                                _logger.LogWarning("Repair failed {0} after dirty shutdown, time out", _databaseName);
+                                Model.Logger.LogWarning("Repair failed {0} after dirty shutdown, time out", _databaseName);
                             }
                             else
                             {
-                                _logger.LogWarning("Repair success {0} after dirty shutdown", _databaseName);
+                                Model.Logger.LogWarning("Repair success {0} after dirty shutdown", _databaseName);
                                 if (proc != null) proc.Close();
                                 //try again
                                 Api.JetAttachDatabase(_session, _databaseName, openMode == OpenDatabaseGrbit.ReadOnly ? AttachDatabaseGrbit.ReadOnly : AttachDatabaseGrbit.None);
@@ -473,7 +461,6 @@ namespace Xbim.IO.Esent
                 if (refCount == 0) //only detach if we have no more references
                     Api.JetDetachDatabase(_session, _databaseName);
             }
-            _logger.LogTrace("Closed PersistedEntityInstanceCache {dbName}", _databaseName);
             _databaseName = null;
             _session.Dispose();
             _session = null;
@@ -667,15 +654,10 @@ namespace Xbim.IO.Esent
                 }
                 Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Failed to Import Step file to {xbimFile}", xbimDbName);
                 Close();
-                try
-                {
-                    File.Delete(xbimDbName);
-                }
-                catch { }
+                File.Delete(xbimDbName);
                 throw;
             }
         }
@@ -700,7 +682,7 @@ namespace Xbim.IO.Esent
 
         internal void ImportStep(string xbimDbName, Stream stream, long streamSize, ReportProgressDelegate progressHandler = null, bool keepOpen = false, bool cacheEntities = false, int codePageOverride = -1)
         {
-            _logger.LogInformation("Opening {esentDb}", xbimDbName);
+
             CreateDatabase(xbimDbName);
             Open(xbimDbName, XbimDBAccess.Exclusive);
             var table = GetEntityTable();
@@ -709,7 +691,7 @@ namespace Xbim.IO.Esent
             {
 
                 _forwardReferences = new BlockingCollection<StepForwardReference>();
-                using (var part21Parser = new P21ToIndexParser(stream, streamSize, table, this, codePageOverride, _loggerFactory))
+                using (var part21Parser = new P21ToIndexParser(stream, streamSize, table, this, codePageOverride))
                 {
                     if (progressHandler != null) part21Parser.ProgressStatus += progressHandler;
                     part21Parser.Parse();
@@ -725,26 +707,12 @@ namespace Xbim.IO.Esent
                 FreeTable(table);
                 if (!keepOpen) Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Failed to Import Step file to {xbimFile}", xbimDbName);
-                TidyUp(xbimDbName, table);
-                throw;
-            }
-        }
-
-        private void TidyUp(string xbimDbName, EsentEntityCursor table)
-        {
-            try
-            {
-
                 FreeTable(table);
                 Close();
                 File.Delete(xbimDbName);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to tidy up {xbimFile}", xbimDbName);
+                throw;
             }
         }
 
@@ -796,7 +764,7 @@ namespace Xbim.IO.Esent
                             using (var reader = entry.Open())
                             {
                                 _forwardReferences = new BlockingCollection<StepForwardReference>();
-                                using (var part21Parser = new P21ToIndexParser(reader, entry.Length, table, this, codePageOverride, _loggerFactory))
+                                using (var part21Parser = new P21ToIndexParser(reader, entry.Length, table, this, codePageOverride))
                                 {
                                     if (progressHandler != null) part21Parser.ProgressStatus += progressHandler;
                                     part21Parser.Parse();
@@ -845,7 +813,7 @@ namespace Xbim.IO.Esent
                                             ModifiedEntities.TryAdd(e.EntityLabel, e);
                                             //pulse will flush the model if necessary (based on the number of entities being processed)
                                             transaction.Pulse();
-                                        }, Model.Metadata, _loggerFactory);
+                                        }, Model.Metadata, Model.Logger);
                                         if (progressHandler != null) xmlReader.ProgressStatus += progressHandler;
                                         _model.Header = xmlReader.Read(xmlInStream, _model);
                                         if (progressHandler != null) xmlReader.ProgressStatus -= progressHandler;
@@ -866,10 +834,11 @@ namespace Xbim.IO.Esent
                 Close();
                 File.Delete(xbimDbName);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Failed to Import Xml file to {xbimFile}", xbimDbName);
-                TidyUp(xbimDbName, table);
+                FreeTable(table);
+                Close();
+                File.Delete(xbimDbName);
                 throw;
             }
         }
@@ -915,7 +884,7 @@ namespace Xbim.IO.Esent
                             ModifiedEntities.TryAdd(e.EntityLabel, e);
                             //pulse will flush the model if necessary (based on the number of entities being processed)
                             transaction.Pulse();
-                        }, Model.Metadata, _loggerFactory);
+                        }, Model.Metadata, _model.Logger);
                         if (progressHandler != null) xmlReader.ProgressStatus += progressHandler;
                         _model.Header = xmlReader.Read(inputStream, _model);
                         if (progressHandler != null) xmlReader.ProgressStatus -= progressHandler;
@@ -983,7 +952,6 @@ namespace Xbim.IO.Esent
             return CountOf(typeof(TIfcType));
 
         }
-
         /// <summary>
         /// returns the number of instances of the specified type and its sub types
         /// </summary>
@@ -994,55 +962,48 @@ namespace Xbim.IO.Esent
             var entityLabels = new HashSet<int>();
             var expressType = Model.Metadata.ExpressType(theType);
             var entityTable = GetEntityTable();
-            var unindexedTypeIds = new HashSet<short>();
-
-            var typesToSearch = expressType != null ?
-                                expressType.NonAbstractSubTypes :
-                                Model.Metadata.TypesImplementing(theType);
+            var typeIds = new HashSet<short>();
+            //get all the type ids we are going to check for
+            foreach (var t in expressType.NonAbstractSubTypes)
+                typeIds.Add(t.TypeId);
             try
             {
+
                 XbimInstanceHandle ih;
-
-                foreach (var type in typesToSearch)
+                if (expressType.IndexedClass)
                 {
-                    if (!type.IndexedClass)
+                    foreach (var typeId in typeIds)
                     {
-                        unindexedTypeIds.Add(type.TypeId);
-                        continue;
-                    }
-
-                    if (entityTable.TrySeekEntityType(type.TypeId, out ih))
-                    {
-                        do
+                        if (entityTable.TrySeekEntityType(typeId, out ih))
                         {
-                            entityLabels.Add(ih.EntityLabel);
-                        } while (entityTable.TryMoveNextEntityType(out ih));
+                            do
+                            {
+                                entityLabels.Add(ih.EntityLabel);
+                            } while (entityTable.TryMoveNextEntityType(out ih));
+                        }
                     }
                 }
-
-                //unindexed types
-                entityTable.MoveBeforeFirst();
-                while (entityTable.TryMoveNext())
+                else
                 {
-                    ih = entityTable.GetInstanceHandle();
-                    if (unindexedTypeIds.Contains(ih.EntityTypeId))
-                        entityLabels.Add(ih.EntityLabel);
-                }
-
-                if (_caching) //look in the createdNew cache and find the new ones only
-                {
-                    //IsAssignableFrom is used instead of type equality checking to collect newly created instances 
-                    //of the child types of the type under counting.
-                    foreach (var entity in CreatedNew.Where(m => theType.IsAssignableFrom(m.Value.GetType())))
-                        entityLabels.Add(entity.Key);
-
+                    entityTable.MoveBeforeFirst();
+                    while (entityTable.TryMoveNext())
+                    {
+                        ih = entityTable.GetInstanceHandle();
+                        if (typeIds.Contains(ih.EntityTypeId))
+                            entityLabels.Add(ih.EntityLabel);
+                    }
                 }
             }
             finally
             {
                 FreeTable(entityTable);
             }
+            if (_caching) //look in the createdNew cache and find the new ones only
+            {
+                foreach (var entity in CreatedNew.Where(m => m.Value.GetType() == theType))
+                    entityLabels.Add(entity.Key);
 
+            }
             return entityLabels.Count;
         }
 
@@ -1246,8 +1207,7 @@ namespace Xbim.IO.Esent
 
             if (type.IsAbstract)
             {
-
-                _logger.LogError("Illegal Entity in the model #{0}, Type {1} is defined as Abstract and cannot be created", label, type.Name);
+                Model.Logger.LogError("Illegal Entity in the model #{0}, Type {1} is defined as Abstract and cannot be created", label, type.Name);
                 return null;
             }
 
@@ -1532,14 +1492,15 @@ namespace Xbim.IO.Esent
             // Check to see if Dispose has already been called.
             if (!_disposed)
             {
+                // If disposing equals true, dispose all managed 
+                // and unmanaged resources.
+                if (disposing)
+                {
+                    Close();
+
+                }
                 try
                 {
-                    // If disposing equals true, dispose all managed 
-                    // and unmanaged resources.
-                    if (disposing)
-                    {
-                        Close();
-                    }
                     var systemPath = _jetInstance.Parameters.SystemDirectory;
                     lock (OpenInstances)
                     {
@@ -1553,11 +1514,11 @@ namespace Xbim.IO.Esent
                                 Directory.Delete(systemPath, true);
                         }
                     }
-                    _logger.LogDebug("Disposed PersistedEntityInstanceCache");
+
                 }
-                catch (Exception ex) //just in case we cannot delete
+                catch (Exception) //just in case we cannot delete
                 {
-                    _logger.LogWarning(ex, "Failed to Dispose Esent Model");
+                    // ignored
                 }
                 finally
                 {
@@ -2391,7 +2352,7 @@ namespace Xbim.IO.Esent
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to delete Jet table {table}", name);
+                Debug.WriteLine(ex.Message);
                 return false;
             }
             return true;
@@ -2468,7 +2429,7 @@ namespace Xbim.IO.Esent
         internal EsentEntityCursor GetWriteableEntityTable()
         {
             AttachedDatabase(); //make sure the database is attached           
-            return new EsentEntityCursor(_model, _databaseName, OpenDatabaseGrbit.None, _loggerFactory);
+            return new EsentEntityCursor(_model, _databaseName, OpenDatabaseGrbit.None);
         }
     }
 }

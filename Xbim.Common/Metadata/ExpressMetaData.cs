@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Xbim.Common.Exceptions;
 
 namespace Xbim.Common.Metadata
 {
@@ -24,7 +23,7 @@ namespace Xbim.Common.Metadata
     /// <summary>
     ///   A collection of IPersistEntity instances, optimised for EXPRESS models
     /// </summary>
-
+    
     public class ExpressMetaData
     {
         /// <summary>
@@ -87,13 +86,12 @@ namespace Xbim.Common.Metadata
             Module = module;
             var typesToProcess =
                 module.GetTypes().Where(
-                    t =>
-                    {
+                    t =>  {
                         var ti = t.GetTypeInfo();
-                        return typeof(IPersist).GetTypeInfo().IsAssignableFrom(t)
-                        && t != typeof(IPersist)
-                        && !ti.IsEnum && !ti.IsInterface
-                        && ti.IsPublic
+                        return typeof(IPersist).GetTypeInfo().IsAssignableFrom(t) 
+                        && t != typeof(IPersist) 
+                        && !ti.IsEnum && !ti.IsInterface 
+                        && ti.IsPublic 
                         && !typeof(IExpressHeaderType).GetTypeInfo().IsAssignableFrom(t);
                     }).ToList();
 
@@ -103,14 +101,14 @@ namespace Xbim.Common.Metadata
             _typeToExpressTypeLookup = new ExpressTypeDictionary();
             _interfaceToExpressTypesLookup = new Dictionary<Type, List<ExpressType>>();
 
-            // System.Diagnostics.Debug.Write(typesToProcess.Count());
-            foreach (var typeToProcess in typesToProcess)
+            try
             {
-                try
+                // System.Diagnostics.Debug.Write(typesToProcess.Count());
+                foreach (var typeToProcess in typesToProcess)
                 {
                     // Debug.WriteLine(typeToProcess.ToString());
                     ExpressType expressTypeToProcess;
-                    if (!_typeToExpressTypeLookup.TryGetValue(typeToProcess, out expressTypeToProcess))
+                    if( !_typeToExpressTypeLookup.TryGetValue(typeToProcess, out expressTypeToProcess))
                         expressTypeToProcess = new ExpressType(typeToProcess);
 
                     var typeLookup = typeToProcess.Name.ToUpperInvariant();
@@ -142,10 +140,10 @@ namespace Xbim.Common.Metadata
                         _interfaceToExpressTypesLookup[interfaceFound].Add(expressTypeToProcess);
                     }
                 }
-                catch (Exception e)
-                {
-                    throw new XbimException($"Error reading Entity Meta Data for entity {typeToProcess.FullName}", e);
-                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error reading Entity Meta Data", e);
             }
         }
 
@@ -233,8 +231,8 @@ namespace Xbim.Common.Metadata
             }
 
             var eType = ExpressType(type);
-            return eType == null ?
-                Enumerable.Empty<short>() :
+            return eType == null ? 
+                Enumerable.Empty<short>() : 
                 eType.NonAbstractSubTypes.Select(t => t.TypeId);
         }
 

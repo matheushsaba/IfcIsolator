@@ -49,6 +49,7 @@ namespace Xbim.Ifc4.StructuralElementsDomain
 		IItemSet<IIfcSectionReinforcementProperties> IIfcReinforcementDefinitionProperties.ReinforcementSectionDefinitions { 
 			get { return new Common.Collections.ProxyItemSet<IfcSectionReinforcementProperties, IIfcSectionReinforcementProperties>( @ReinforcementSectionDefinitions); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

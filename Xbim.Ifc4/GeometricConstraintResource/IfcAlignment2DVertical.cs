@@ -42,6 +42,7 @@ namespace Xbim.Ifc4.GeometricConstraintResource
 		IItemSet<IIfcAlignment2DVerticalSegment> IIfcAlignment2DVertical.Segments { 
 			get { return new Common.Collections.ProxyItemSet<IfcAlignment2DVerticalSegment, IIfcAlignment2DVerticalSegment>( @Segments); } 
 		}	
+		 
 		IEnumerable<IIfcAlignmentCurve> IIfcAlignment2DVertical.ToAlignmentCurve {  get { return @ToAlignmentCurve; } }
 		#endregion
 

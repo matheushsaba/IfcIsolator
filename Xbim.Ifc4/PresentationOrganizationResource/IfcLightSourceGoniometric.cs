@@ -78,6 +78,7 @@ namespace Xbim.Ifc4.PresentationOrganizationResource
 			get { return @LightDistributionDataSource; } 
 			set { LightDistributionDataSource = value as IfcLightDistributionDataSourceSelect;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

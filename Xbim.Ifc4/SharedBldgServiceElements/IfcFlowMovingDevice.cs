@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.SharedBldgServiceElements
 	public  partial class @IfcFlowMovingDevice : IfcDistributionFlowElement, IInstantiableEntity, IIfcFlowMovingDevice, IContainsEntityReferences, IContainsIndexedReferences, IEquatable<@IfcFlowMovingDevice>
 	{
 		#region IIfcFlowMovingDevice explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

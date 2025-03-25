@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Xbim.Common.Configuration;
+﻿using Microsoft.Extensions.Logging;
+using System;
+using Xbim.Common;
 
 namespace Xbim.Ifc2x3.Validation
 {
@@ -8,8 +8,7 @@ namespace Xbim.Ifc2x3.Validation
     {
         internal static ILogger CreateLogger<T>()
         {
-            var factory = XbimServices.Current.GetLoggerFactory();
-            return factory.CreateLogger<T>();
+            return XbimLogging.CreateLogger<T>();
         }
     }
 }

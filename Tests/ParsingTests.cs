@@ -16,7 +16,7 @@ using Xbim.IO.Step21;
 namespace Xbim.Essentials.Tests
 {
     [TestClass]
-    public class ParsingTests : TestBase
+    public class ParsingTests
     {
         private static readonly IEntityFactory ef4 = new Ifc4.EntityFactoryIfc4();
         private static readonly IEntityFactory ef2x3 = new Ifc2x3.EntityFactoryIfc2x3();
@@ -234,14 +234,14 @@ namespace Xbim.Essentials.Tests
                 Assert.IsTrue(mat2.Name.ToString().EndsWith(@"\"), "String ending in escaped backslash is not parsed correctly");
 
                 var acc = (Ifc2x3.MaterialResource.IfcMaterial)store.Instances[419];
-                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "String with \\X escaping is not parsed correctly");
+                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "Text with accented character is not parsed correctly");
                 acc = (Ifc2x3.MaterialResource.IfcMaterial)store.Instances[420];
-                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "String with \\X2 escaping is not parsed correctly");
+                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "Text with accented character is not parsed correctly");
                 acc = (Ifc2x3.MaterialResource.IfcMaterial)store.Instances[421];
-                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "String with \\X4 escaping is not parsed correctly");
+                Assert.IsTrue(acc.Name.ToString().EndsWith("à"), "Text with accented character is not parsed correctly");
 
                 var beam = (IfcBeam)store.Instances[432];
-                Assert.IsNotNull(beam, "element after escaped strings is not read correctly");
+                Assert.IsNotNull(beam, "element after double backslash is not read correctly");
 
                 store.Close();
             }
@@ -260,16 +260,6 @@ namespace Xbim.Essentials.Tests
             {
                 var errCount = model.CreateFrom("TestFiles\\NewlinesInStrings.ifc");
                 Assert.AreEqual(true, errCount);
-            }
-        }
-
-        [TestMethod]
-        public void CanParseSpecicalSolidusEscape()
-        {
-            using (var model = new Xbim.IO.Memory.MemoryModel(ef2x3))
-            {
-                var errCount = model.LoadStep21("TestFiles\\SpecicalSolidusEscape.ifc");
-                Assert.AreEqual(0, errCount);
             }
         }
 
@@ -298,7 +288,7 @@ namespace Xbim.Essentials.Tests
         {
             using (var strm = File.OpenRead("TestFiles\\Badly formed Ifc file.ifc"))
             {
-                var scanner = new Scanner(strm, LoggerFactory);
+                var scanner = new Scanner(strm);
                 int tok;
                 do
                 {
@@ -762,7 +752,6 @@ namespace Xbim.Essentials.Tests
         }
 
         [TestMethod]
-        [Ignore("We removed the ability to read illegal step files in order to read legal files with the \"\\S\\'\" sequence, that would otherwise be parsed by the normal backslash,S,backslash sequence, causing an early closure of the string when hitting the \"'\".")]
         public void EncodeBackslash()
         {
             const string path = "C:\\Data\\Martin\\document.txt";
@@ -810,15 +799,6 @@ namespace Xbim.Essentials.Tests
         }
 
         [TestMethod]
-        public void Parsing_large_entity_label_doesnt_loop()
-        {
-            using var model = new IO.Memory.MemoryModel(ef2x3);
-            var errCount = model.LoadStep21("TestFiles\\Large_entity_label.ifc");
-            Assert.AreEqual(1, errCount);
-        }
-
-        [TestMethod]
-        [Ignore("Slow test")]
         // this is a meta tast of the large stream mock-up
         public void LargeStreamTest()
         {
@@ -848,7 +828,6 @@ namespace Xbim.Essentials.Tests
         }
 
         [TestMethod]
-        [Ignore("Slow test")]
         public void ParsingLargeFile()
         {
             using (var model = new Xbim.IO.Memory.MemoryModel(ef2x3))
@@ -870,8 +849,7 @@ namespace Xbim.Essentials.Tests
         {
             internal readonly Stream inner;
             internal const long offset = int.MaxValue;
-            private static readonly byte[] line = "                                                                                                    \r\n"
-                .Select(c => Convert.ToByte(c)).ToArray();
+            private const string line = "                                                                                                    \r\n";
 
             public LargeStream(Stream stream)
             {
@@ -904,7 +882,7 @@ namespace Xbim.Essentials.Tests
                 if ((Position + count) < offset)
                 {
                     for (int i = 0; i < count; i++)
-                        buffer[bufferOffset + i] = line[((Position + i) % line.Length)];
+                        buffer[bufferOffset + i] = (byte)line[(int)((Position + i) % line.Length)];
 
                     Position += count;
                     return count;

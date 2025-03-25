@@ -44,6 +44,7 @@ namespace Xbim.Ifc4.MeasureResource
 			get { return @Currency; } 
 			set { Currency = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -41,6 +41,7 @@ namespace Xbim.Ifc4.ProfileResource
 		IItemSet<IIfcCurve> IIfcArbitraryProfileDefWithVoids.InnerCurves { 
 			get { return new Common.Collections.ProxyItemSet<IfcCurve, IIfcCurve>( @InnerCurves); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

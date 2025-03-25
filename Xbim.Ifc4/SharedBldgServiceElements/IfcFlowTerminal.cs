@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.SharedBldgServiceElements
 	public  partial class @IfcFlowTerminal : IfcDistributionFlowElement, IInstantiableEntity, IIfcFlowTerminal, IContainsEntityReferences, IContainsIndexedReferences, IEquatable<@IfcFlowTerminal>
 	{
 		#region IIfcFlowTerminal explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

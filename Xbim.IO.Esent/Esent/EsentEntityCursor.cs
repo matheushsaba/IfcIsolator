@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Isam.Esent.Interop;
 using Xbim.Common;
 using Xbim.Common.Exceptions;
-using Xbim.Common.Configuration;
 using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
 
@@ -194,17 +192,16 @@ namespace Xbim.IO.Esent
         }
 
         public EsentEntityCursor(EsentModel model, string database)
-            : this(model, database, OpenDatabaseGrbit.None, default)
+            : this(model, database, OpenDatabaseGrbit.None)
         {
         }
         /// <summary>
         /// Constructs a table and opens it
         /// </summary>
-        public EsentEntityCursor(EsentModel model, string database, OpenDatabaseGrbit mode, ILoggerFactory loggerFactory)
+        public EsentEntityCursor(EsentModel model, string database, OpenDatabaseGrbit mode)
             : base(model, database, mode)
         {
-            loggerFactory = loggerFactory ?? XbimServices.Current.GetLoggerFactory();
-            _logger = loggerFactory.CreateLogger<EsentEntityCursor>(); ;
+            _logger = XbimLogging.CreateLogger<EsentEntityCursor>(); ;
             Api.JetOpenTable(Sesid, DbId, ifcEntityTableName, null, 0,
                 mode == OpenDatabaseGrbit.ReadOnly ? OpenTableGrbit.ReadOnly :
                 mode == OpenDatabaseGrbit.Exclusive ? OpenTableGrbit.DenyWrite : OpenTableGrbit.None, out Table);

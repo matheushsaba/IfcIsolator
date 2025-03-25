@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.RepresentationResource
 	public  partial class @IfcTopologyRepresentation : IfcShapeModel, IInstantiableEntity, IIfcTopologyRepresentation, IContainsEntityReferences, IContainsIndexedReferences, IEquatable<@IfcTopologyRepresentation>
 	{
 		#region IIfcTopologyRepresentation explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

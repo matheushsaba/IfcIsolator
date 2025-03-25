@@ -22,10 +22,5 @@ namespace Xbim.Common
         /// Number of cached relations
         /// </summary>
         int Size { get; }
-
-        /// <summary>
-        /// Indicates that the cache has been disposed and should not be used
-        /// </summary>
-        bool IsDisposed { get; }
     }
 }

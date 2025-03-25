@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.TopologyResource
 	public  partial class @IfcLoop : IfcTopologicalRepresentationItem, IInstantiableEntity, IIfcLoop, IEquatable<@IfcLoop>
 	{
 		#region IIfcLoop explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

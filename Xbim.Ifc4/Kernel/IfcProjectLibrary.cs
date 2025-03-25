@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.Kernel
 	public  partial class @IfcProjectLibrary : IfcContext, IInstantiableEntity, IIfcProjectLibrary, IContainsEntityReferences, IEquatable<@IfcProjectLibrary>
 	{
 		#region IIfcProjectLibrary explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

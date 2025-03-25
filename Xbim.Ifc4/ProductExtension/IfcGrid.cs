@@ -57,6 +57,7 @@ namespace Xbim.Ifc4.ProductExtension
 			get { return @PredefinedType; } 
 			set { PredefinedType = value;}
 		}	
+		 
 		IEnumerable<IIfcRelContainedInSpatialStructure> IIfcGrid.ContainedInStructure {  get { return @ContainedInStructure; } }
 		#endregion
 

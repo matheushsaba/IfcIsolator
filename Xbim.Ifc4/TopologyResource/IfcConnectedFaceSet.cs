@@ -40,6 +40,7 @@ namespace Xbim.Ifc4.TopologyResource
 		IItemSet<IIfcFace> IIfcConnectedFaceSet.CfsFaces { 
 			get { return new Common.Collections.ProxyItemSet<IfcFace, IIfcFace>( @CfsFaces); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

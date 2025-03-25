@@ -12,7 +12,6 @@
 
 #region Directives
 
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -97,8 +96,8 @@ namespace Xbim.IO.Esent
 
 
 
-        internal P21ToIndexParser(Stream inputP21, long streamSize,  EsentEntityCursor table, PersistedEntityInstanceCache cache, int codePageOverride = -1, ILoggerFactory loggerFactory = default)
-            : base(inputP21, loggerFactory)
+        internal P21ToIndexParser(Stream inputP21, long streamSize,  EsentEntityCursor table, PersistedEntityInstanceCache cache, int codePageOverride = -1)
+            : base(inputP21)
         {
 
             this._table = table;

@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.PropertyResource
 	public abstract partial class @IfcSimpleProperty : IfcProperty, IIfcSimpleProperty, IEquatable<@IfcSimpleProperty>
 	{
 		#region IIfcSimpleProperty explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

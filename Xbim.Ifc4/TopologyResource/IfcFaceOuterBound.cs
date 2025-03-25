@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.TopologyResource
 	public  partial class @IfcFaceOuterBound : IfcFaceBound, IInstantiableEntity, IIfcFaceOuterBound, IContainsEntityReferences, IEquatable<@IfcFaceOuterBound>
 	{
 		#region IIfcFaceOuterBound explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

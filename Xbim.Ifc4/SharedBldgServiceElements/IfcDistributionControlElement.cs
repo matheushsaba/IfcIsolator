@@ -38,6 +38,7 @@ namespace Xbim.Ifc4.SharedBldgServiceElements
 	public  partial class @IfcDistributionControlElement : IfcDistributionElement, IInstantiableEntity, IIfcDistributionControlElement, IContainsEntityReferences, IContainsIndexedReferences, IEquatable<@IfcDistributionControlElement>
 	{
 		#region IIfcDistributionControlElement explicit implementation
+		 
 		IEnumerable<IIfcRelFlowControlElements> IIfcDistributionControlElement.AssignedToFlowElement {  get { return @AssignedToFlowElement; } }
 		#endregion
 

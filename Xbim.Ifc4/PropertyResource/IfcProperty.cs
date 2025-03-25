@@ -58,6 +58,7 @@ namespace Xbim.Ifc4.PropertyResource
 			get { return @Description; } 
 			set { Description = value;}
 		}	
+		 
 		IEnumerable<IIfcPropertySet> IIfcProperty.PartOfPset {  get { return @PartOfPset; } }
 		IEnumerable<IIfcPropertyDependencyRelationship> IIfcProperty.PropertyForDependance {  get { return @PropertyForDependance; } }
 		IEnumerable<IIfcPropertyDependencyRelationship> IIfcProperty.PropertyDependsOn {  get { return @PropertyDependsOn; } }

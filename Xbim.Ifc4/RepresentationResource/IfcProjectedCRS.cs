@@ -56,6 +56,7 @@ namespace Xbim.Ifc4.RepresentationResource
 			get { return @MapUnit; } 
 			set { MapUnit = value as IfcNamedUnit;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

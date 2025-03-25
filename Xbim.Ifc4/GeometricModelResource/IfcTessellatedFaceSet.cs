@@ -47,6 +47,7 @@ namespace Xbim.Ifc4.GeometricModelResource
 			get { return @Coordinates; } 
 			set { Coordinates = value as IfcCartesianPointList3D;}
 		}	
+		 
 		IEnumerable<IIfcIndexedColourMap> IIfcTessellatedFaceSet.HasColours {  get { return @HasColours; } }
 		IEnumerable<IIfcIndexedTextureMap> IIfcTessellatedFaceSet.HasTextures {  get { return @HasTextures; } }
 		#endregion

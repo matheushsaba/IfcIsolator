@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
 using Xbim.Ifc;
 using Xbim.Ifc4;
 using Xbim.IO;
@@ -14,13 +13,9 @@ namespace Xbim.Essentials.Tests
         [TestMethod]
         public void CanUpgradeDbStucture()
         {
-            var sourceFile = @"GeometryCacheTestFiles\Monolith_v10.xBIM";
-            var targetFile = @"GeometryCacheTestFiles\Monolith_v10_WIP.xBIM";
-
-            File.Copy(sourceFile, targetFile, overwrite:true);
             using (var m = new EsentModel(new EntityFactoryIfc4()))
             {
-                m.Open(targetFile, XbimDBAccess.Exclusive);
+                m.Open(@"GeometryCacheTestFiles\Monolith_v10.xBIM", XbimDBAccess.Exclusive);
                 Assert.AreEqual(1, m.GeometrySupportLevel, "GeometrySupportLevel for Monolith_v10 should be 1");
 
                 var updated = m.EnsureGeometryTables();
@@ -33,7 +28,7 @@ namespace Xbim.Essentials.Tests
                 m.Close();
             }
 
-            using (var store = IfcStore.Open(targetFile))
+            using (var store = IfcStore.Open(@"GeometryCacheTestFiles\Monolith_v10.xBIM"))
             {
                 var geometryStore = store.GeometryStore;
 

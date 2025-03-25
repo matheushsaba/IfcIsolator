@@ -47,6 +47,7 @@ namespace Xbim.Ifc4.ProductExtension
 			get { return @LongName; } 
 			set { LongName = value;}
 		}	
+		 
 		IEnumerable<IIfcRelContainedInSpatialStructure> IIfcSpatialElement.ContainsElements {  get { return @ContainsElements; } }
 		IEnumerable<IIfcRelServicesBuildings> IIfcSpatialElement.ServicedBySystems {  get { return @ServicedBySystems; } }
 		IEnumerable<IIfcRelReferencedInSpatialStructure> IIfcSpatialElement.ReferencesElements {  get { return @ReferencesElements; } }

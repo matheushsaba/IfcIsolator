@@ -54,6 +54,7 @@ namespace Xbim.Ifc4.Kernel
 		IItemSet<IIfcPropertyTemplate> IIfcPropertySetTemplate.HasPropertyTemplates { 
 			get { return new Common.Collections.ProxyItemSet<IfcPropertyTemplate, IIfcPropertyTemplate>( @HasPropertyTemplates); } 
 		}	
+		 
 		IEnumerable<IIfcRelDefinesByTemplate> IIfcPropertySetTemplate.Defines {  get { return @Defines; } }
 		#endregion
 

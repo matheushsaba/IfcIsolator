@@ -40,6 +40,7 @@ namespace Xbim.Ifc4.Kernel
 		IItemSet<IIfcDefinitionSelect> IIfcRelAssociates.RelatedObjects { 
 			get { return new Common.Collections.ProxyItemSet<IfcDefinitionSelect, IIfcDefinitionSelect>( @RelatedObjects); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

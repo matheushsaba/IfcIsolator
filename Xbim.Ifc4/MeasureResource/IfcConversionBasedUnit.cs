@@ -51,6 +51,7 @@ namespace Xbim.Ifc4.MeasureResource
 			get { return @ConversionFactor; } 
 			set { ConversionFactor = value as IfcMeasureWithUnit;}
 		}	
+		 
 		IEnumerable<IIfcExternalReferenceRelationship> IIfcConversionBasedUnit.HasExternalReference {  get { return @HasExternalReference; } }
 		#endregion
 

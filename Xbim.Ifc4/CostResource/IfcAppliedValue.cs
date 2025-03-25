@@ -104,6 +104,7 @@ namespace Xbim.Ifc4.CostResource
 		IEnumerable<IIfcAppliedValue> IIfcAppliedValue.Components { 
 			get { return new Common.Collections.ProxyItemSet<IfcAppliedValue, IIfcAppliedValue>( @Components); } 
 		}	
+		 
 		IEnumerable<IIfcExternalReferenceRelationship> IIfcAppliedValue.HasExternalReference {  get { return @HasExternalReference; } }
 		#endregion
 

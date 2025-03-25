@@ -42,6 +42,7 @@ namespace Xbim.Ifc4.GeometryResource
 	public abstract partial class @IfcRepresentationItem : PersistEntity, IIfcRepresentationItem, IEquatable<@IfcRepresentationItem>
 	{
 		#region IIfcRepresentationItem explicit implementation
+		 
 		IEnumerable<IIfcPresentationLayerAssignment> IIfcRepresentationItem.LayerAssignment {  get { return @LayerAssignment; } }
 		IEnumerable<IIfcStyledItem> IIfcRepresentationItem.StyledByItem {  get { return @StyledByItem; } }
 		#endregion

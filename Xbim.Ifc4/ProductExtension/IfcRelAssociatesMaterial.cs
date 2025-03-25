@@ -45,6 +45,7 @@ namespace Xbim.Ifc4.ProductExtension
 			get { return @RelatingMaterial; } 
 			set { RelatingMaterial = value as IfcMaterialSelect;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

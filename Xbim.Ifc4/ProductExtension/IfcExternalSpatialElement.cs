@@ -43,6 +43,7 @@ namespace Xbim.Ifc4.ProductExtension
 			get { return @PredefinedType; } 
 			set { PredefinedType = value;}
 		}	
+		 
 		IEnumerable<IIfcRelSpaceBoundary> IIfcExternalSpatialElement.BoundedBy {  get { return @BoundedBy; } }
 		#endregion
 

@@ -83,6 +83,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 			get { return @LineHeight; } 
 			set { LineHeight = value as IfcSizeSelect;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.Kernel
 	public abstract partial class @IfcRelDecomposes : IfcRelationship, IIfcRelDecomposes, IEquatable<@IfcRelDecomposes>
 	{
 		#region IIfcRelDecomposes explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

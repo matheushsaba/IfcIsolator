@@ -41,6 +41,7 @@ namespace Xbim.Ifc4.GeometricModelResource
 		IItemSet<IItemSet<IfcPositiveInteger>> IIfcIndexedPolygonalFaceWithVoids.InnerCoordIndices { 
 			get { return @InnerCoordIndices; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

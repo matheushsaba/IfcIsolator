@@ -55,6 +55,7 @@ namespace Xbim.Ifc4.SharedComponentElements
 			get { return @NominalLength; } 
 			set { NominalLength = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -1,17 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Xbim.Common.Configuration;
+using Xbim.IO;
 using Xbim.Common.Exceptions;
 using Xbim.Common.Metadata;
-using Xbim.IO;
-using Xbim.IO.Parser;
 using Xbim.IO.Step21;
+using Xbim.IO.Parser;
 
 namespace Xbim.Common
 {
@@ -23,6 +21,12 @@ namespace Xbim.Common
         /// </summary>
         private static readonly ConcurrentDictionary<Type, List<ReferingType>> ReferingTypesListsCache =
             new ConcurrentDictionary<Type, List<ReferingType>>();
+
+        /// <summary>
+        /// This only keeps cache of metadata and types to speed up reflection search.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, ReferingType> ReferingTypesCache =
+            new ConcurrentDictionary<Type, ReferingType>();
 
         /// <summary>
         /// This will delete the entity from model dictionary and also from any references in the model.
@@ -112,22 +116,22 @@ namespace Xbim.Common
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var type in types)
             {
-                var singleReferences = type.Properties.Values.Where(p =>
+                if (!ReferingTypesCache.TryGetValue(type.Type, out ReferingType rt))
+                {
+                    var singleReferences = type.Properties.Values.Where(p =>
                     p.EntityAttribute != null && p.EntityAttribute.Order > 0 &&
                     p.PropertyInfo.PropertyType.GetTypeInfo().IsAssignableFrom(entityType)).ToList();
-                var listReferences = type.Properties.Values.Where(p =>
-                    p.EntityAttribute != null && p.EntityAttribute.Order > 0 &&
-                    p.PropertyInfo.PropertyType.GetTypeInfo().IsGenericType &&
-                    p.PropertyInfo.PropertyType.GenericTypeArgumentIsAssignableFrom(entityType)).ToList();
-                var nestedListReferences = type.Properties.Values.Where(p =>
-                    p.EntityAttribute != null && p.EntityAttribute.Order > 0 &&
-                    p.PropertyInfo.PropertyType.GetTypeInfo().IsGenericType &&
-                    p.PropertyInfo.PropertyType.GetItemTypeFromGenericType().IsGenericType &&
-                    p.PropertyInfo.PropertyType.GetItemTypeFromGenericType().GenericTypeArgumentIsAssignableFrom(entityType)).ToList();
-                if (!singleReferences.Any() && !listReferences.Any() && !nestedListReferences.Any())
-                    continue;
+                    var listReferences =
+                        type.Properties.Values.Where(p =>
+                            p.EntityAttribute != null && p.EntityAttribute.Order > 0 &&
+                            p.PropertyInfo.PropertyType.GetTypeInfo().IsGenericType &&
+                            p.PropertyInfo.PropertyType.GenericTypeArgumentIsAssignableFrom(entityType)).ToList();
+                    if (!singleReferences.Any() && !listReferences.Any())
+                        continue;
 
-                var rt = new ReferingType { Type = type, SingleReferences = singleReferences, ListReferences = listReferences, NestedListReferences = nestedListReferences };
+                    rt = new ReferingType { Type = type, SingleReferences = singleReferences, ListReferences = listReferences };
+                    ReferingTypesCache.TryAdd(type.Type, rt);
+                }
                 referingTypes.Add(rt);
             }
             return referingTypes;
@@ -154,12 +158,12 @@ namespace Xbim.Common
                 //check properties
                 foreach (var pInfo in referingType.SingleReferences.Select(p => p.PropertyInfo))
                 {
-                    if (pInfo.GetValue(toCheck) is not IPersistEntity pVal)
+                    var pVal = pInfo.GetValue(toCheck);
+                    if (pVal == null && replacement == null)
                         continue;
 
-                    if (pVal.EntityLabel != entity.EntityLabel) 
-                        continue;
-
+                    //it is enough to compare references
+                    if (!ReferenceEquals(pVal, entity)) continue;
                     pInfo.SetValue(toCheck, replacement);
                 }
 
@@ -169,97 +173,59 @@ namespace Xbim.Common
                     if (pVal == null) continue;
 
                     //it might be uninitialized optional item set
-                    if (pVal is IOptionalItemSet optSet && !optSet.Initialized)
-                        continue;
+                    var optSet = pVal as IOptionalItemSet;
+                    if (optSet != null && !optSet.Initialized) continue;
 
                     //or it is non-optional item set implementing IList
-                    if (pVal is IList itemSet)
+                    var itemSet = pVal as IList;
+                    if (itemSet != null)
                     {
                         if (itemSet.Contains(entity))
-                        {
                             itemSet.Remove(entity);
-                            if (replacement != null)
-                                itemSet.Add(replacement);
-                        }
+                        if (replacement != null)
+                            itemSet.Add(replacement);
                         continue;
                     }
 
-                    FallBackOperation(toCheck, pInfo);
-                }
-
-                foreach (var pInfo in referingType.NestedListReferences.Select(p => p.PropertyInfo))
-                {
-                    var pVal = pInfo.GetValue(toCheck);
-                    if (pVal == null) continue;
-
-                    //it might be uninitialized optional item set
-                    if (pVal is IOptionalItemSet optSet && !optSet.Initialized)
-                        continue;
-
-                    //or it is non-optional item set implementing IList
-                    if (pVal is IList nestedItemSet && nestedItemSet != null)
+                    //fall back operating on common list functions using reflection (this is slow)
+                    var contMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Contains");
+                    if (contMethod == null)
                     {
-                        for (int i = 0; i < nestedItemSet.Count; i++)
-                        {
-                            if (nestedItemSet[i] is IList itemSet && itemSet != null)
-                            {
-                                for (int j = 0; j < itemSet.Count; j++)
-                                {
-                                    if (!itemSet.Contains(entity))
-                                        continue;
-                                    itemSet.RemoveAt(j);
-                                    if (replacement != null)
-                                        itemSet.Insert(j, replacement);
-                                    else
-                                        j--; // keep in sync
-                                }
-                            }
-                            // ? not sure if it needs a FallBackOperation here.
-                        }
+                        var msg =
+                            string.Format(
+                                "It wasn't possible to check containment of entity {0} in property {1} of {2}. No suitable method found.",
+                                entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
+                        throw new XbimException(msg);
                     }
+                    var contains = (bool)contMethod.Invoke(pVal, new object[] { entity });
+                    if (!contains) continue;
+                    var removeMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Remove");
+                    if (removeMethod == null)
+                    {
+                        var msg =
+                            string.Format(
+                                "It wasn't possible to remove reference to entity {0} in property {1} of {2}. No suitable method found.",
+                                entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
+                        throw new XbimException(msg);
+                    }
+                    removeMethod.Invoke(pVal, new object[] { entity });
+
+                    if (replacement == null)
+                        continue;
+
+                    var addMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Add");
+                    if (addMethod == null)
+                    {
+                        var msg =
+                            string.Format(
+                                "It wasn't possible to add reference to entity {0} in property {1} of {2}. No suitable method found.",
+                                entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
+                        throw new XbimException(msg);
+                    }
+                    addMethod.Invoke(pVal, new object[] { replacement });
                 }
             }
 
-            void FallBackOperation(IPersistEntity toCheck, PropertyInfo pInfo)
-            {
-                //fall back operating on common list functions using reflection (this is slow)
-                var contMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Contains");
-                var pVal = pInfo.GetValue(toCheck);
-                if (contMethod == null)
-                {
-                    var msg =
-                        string.Format(
-                            "It wasn't possible to check containment of entity {0} in property {1} of {2}. No suitable method found.",
-                            entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
-                    throw new XbimException(msg);
-                }
-                var contains = (bool)contMethod.Invoke(pVal, new object[] { entity });
-                if (!contains) return;
-                var removeMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Remove");
-                if (removeMethod == null)
-                {
-                    var msg =
-                        string.Format(
-                            "It wasn't possible to remove reference to entity {0} in property {1} of {2}. No suitable method found.",
-                            entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
-                    throw new XbimException(msg);
-                }
-                removeMethod.Invoke(pVal, new object[] { entity });
-
-                if (replacement == null)
-                    return;
-
-                var addMethod = pInfo.PropertyType.GetTypeInfo().GetMethod("Add");
-                if (addMethod == null)
-                {
-                    var msg =
-                        string.Format(
-                            "It wasn't possible to add reference to entity {0} in property {1} of {2}. No suitable method found.",
-                            entity.GetType().Name, pInfo.Name, toCheck.GetType().Name);
-                    throw new XbimException(msg);
-                }
-                addMethod.Invoke(pVal, new object[] { replacement });
-            }
         }
 
         /// <summary>
@@ -320,38 +286,6 @@ namespace Xbim.Common
                             i--; // keep in sync
                     }
                 }
-
-                foreach (var pInfo in referingType.NestedListReferences.Select(p => p.PropertyInfo))
-                {
-                    var pVal = pInfo.GetValue(toCheck);
-                    if (pVal == null) continue;
-
-                    //it might be uninitialized optional item set
-                    if (pVal is IOptionalItemSet optSet && !optSet.Initialized)
-                        continue;
-
-                    //or it is non-optional item set implementing IList
-                    if (!(pVal is IList nestedItemSet))
-                        throw new XbimException($"Unable to remove items from {referingType.Type.Name}.{pInfo.Name}. No IList implementation.");
-
-                    for (int i = 0; i < nestedItemSet.Count; i++)
-                    {
-                        if (!(nestedItemSet[i] is IList itemSet))
-                            throw new XbimException($"Unable to remove items from {referingType.Type.Name}.{pInfo.Name}. No IList implementation.");
-
-                        for (int j = 0; j < itemSet.Count; j++)
-                        {
-                            var item = itemSet[j];
-                            if (!hash.Contains(item))
-                                continue;
-                            itemSet.RemoveAt(j);
-                            if (replacement != null)
-                                itemSet.Insert(j, replacement);
-                            else
-                                j--; // keep in sync
-                        }
-                    }
-                }
             }
 
         }
@@ -365,7 +299,6 @@ namespace Xbim.Common
             public ExpressType Type;
             public List<ExpressMetaProperty> SingleReferences;
             public List<ExpressMetaProperty> ListReferences;
-            public List<ExpressMetaProperty> NestedListReferences;
         }
         #endregion
 
@@ -583,8 +516,7 @@ namespace Xbim.Common
         #region Schema Version
         public static List<string> GetStepFileSchemaVersion(Stream stream)
         {
-            var loggerFactory = XbimServices.Current.GetLoggerFactory();
-            var scanner = new Scanner(stream, loggerFactory);
+            var scanner = new Scanner(stream);
             int tok = scanner.yylex();
             int dataToken = (int)Tokens.DATA;
             int eof = (int)Tokens.EOF;

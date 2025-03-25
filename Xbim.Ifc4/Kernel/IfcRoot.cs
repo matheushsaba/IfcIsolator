@@ -65,6 +65,7 @@ namespace Xbim.Ifc4.Kernel
 			get { return @Description; } 
 			set { Description = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

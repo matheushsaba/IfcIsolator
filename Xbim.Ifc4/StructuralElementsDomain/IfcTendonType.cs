@@ -61,6 +61,7 @@ namespace Xbim.Ifc4.StructuralElementsDomain
 			get { return @SheathDiameter; } 
 			set { SheathDiameter = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

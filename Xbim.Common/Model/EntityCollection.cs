@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Xbim.Common;
-using Xbim.Common.Configuration;
 using Xbim.Common.Exceptions;
 
 namespace Xbim.Common.Model
@@ -26,15 +25,13 @@ namespace Xbim.Common.Model
                 return obj.EntityLabel;
             }
         }
-
-        private readonly ILogger _logger;
         private readonly StepModel _model;
         private readonly XbimMultiValueDictionary<Type, IPersistEntity> _internal;
         private readonly Dictionary<int, IPersistEntity> _collection = new Dictionary<int, IPersistEntity>(0x77777);
 
         private List<int> _naturalOrder = new List<int>(0x77777);
         //about a default of half a million stops too much growing, and 7 is lucky; 
-        public int LastLabel => CurrentLabel;
+
         internal void DiscardNaturalOrder()
         {
             _naturalOrder = null;
@@ -54,9 +51,6 @@ namespace Xbim.Common.Model
             _internal =
                 XbimMultiValueDictionary<Type, IPersistEntity>.Create(
                     () => new HashSet<IPersistEntity>(new EntityLabelComparer()));
-
-            var logFactory = XbimServices.Current.GetLoggerFactory();
-            _logger = logFactory.CreateLogger<EntityCollection>();
         }
 
         private IEnumerable<Type> GetQueryTypes(Type type)
@@ -64,8 +58,8 @@ namespace Xbim.Common.Model
             var expType = _model.Metadata.ExpressType(type);
             if (expType != null)
                 return expType.NonAbstractSubTypes.Select(t => t.Type);
-
-            if (!type.GetTypeInfo().IsInterface) return new List<Type>();
+            
+            if(!type.GetTypeInfo().IsInterface) return new List<Type>();
 
             var implementations = _model.Metadata.ExpressTypesImplementing(type).Where(i => !i.Type.GetTypeInfo().IsAbstract);
             return implementations.Select(e => e.Type);
@@ -75,10 +69,31 @@ namespace Xbim.Common.Model
             where T : IPersistEntity
 
         {
-            if (!(_model.InverseCache is MemoryInverseCache cache) || cache.IsDisposed)
+            var cache = _model.InverseCache as MemoryInverseCache;
+            if (cache == null)
                 return Where(condition);
 
             if (cache.TryGet(inverseProperty, inverseArgument, out IEnumerable<T> result))
+                return result.Where(condition);
+
+            //build cache for this type
+            lock (cache)
+            {
+                // check the condition again for case it was computed whilewaiting for access
+                if (cache.TryGet(inverseProperty, inverseArgument, out result))
+                    return result.Where(condition);
+
+                var indexed = OfType<T>().OfType<IContainsIndexedReferences>().ToList();
+                foreach (var item in indexed)
+                {
+                    foreach (var reference in item.IndexedReferences)
+                    {
+                        cache.Add(reference.EntityLabel, item);
+                    }
+                }
+            }
+
+            if (cache.TryGet(inverseProperty, inverseArgument, out result))
                 return result.Where(condition);
 
             return Enumerable.Empty<T>();
@@ -95,8 +110,8 @@ namespace Xbim.Common.Model
                 foreach (var type in resultTypes)
                 {
                     if (!_internal.TryGetValue(type, out ICollection<IPersistEntity> entities)) continue;
-                    foreach (var candidate in entities.Where(c => condition((T)c)))
-                        yield return (T)candidate;
+                    foreach (var candidate in entities.Where(c => condition((T) c)))
+                        yield return (T) candidate;
                 }
             }
             else
@@ -105,7 +120,7 @@ namespace Xbim.Common.Model
                 {
                     if (!_internal.TryGetValue(type, out ICollection<IPersistEntity> entities)) continue;
                     foreach (var candidate in entities)
-                        yield return (T)candidate;
+                        yield return (T) candidate;
                 }
             }
         }
@@ -238,9 +253,9 @@ namespace Xbim.Common.Model
 
                 var exist = _collection[entity.EntityLabel];
                 if (entity.ExpressType != exist.ExpressType)
-                    _logger?.LogError($"Duplicate entity #{entity.EntityLabel} with different data type ({exist.ExpressType.Name}/{entity.ExpressType.Name})", ex);
+                    _model.Logger?.LogError($"Duplicate entity #{entity.EntityLabel} with different data type ({exist.ExpressType.Name}/{entity.ExpressType.Name})", ex);
                 else
-                    _logger?.LogWarning($"Duplicate entity #{entity.EntityLabel}", ex);
+                    _model.Logger?.LogWarning($"Duplicate entity #{entity.EntityLabel}", ex);
             }
         }
 
@@ -250,7 +265,7 @@ namespace Xbim.Common.Model
             var key = entity.GetType();
             Action undo = () =>
             {
-                _internal.Remove(key, entity);
+                _internal.Remove(key,entity);
                 _collection.Remove(entity.EntityLabel);
                 if (_naturalOrder != null) _naturalOrder.Remove(entity.EntityLabel);
             };
@@ -266,7 +281,7 @@ namespace Xbim.Common.Model
                 doAction();
                 return;
             }
-
+            
             _model.CurrentTransaction.DoReversibleAction(doAction, undo, entity, ChangeType.New, 0);
         }
 
@@ -283,14 +298,14 @@ namespace Xbim.Common.Model
             int? index = default;
             Action doAction = () =>
             {
-                _internal.Remove(key, entity);
-                removed = _collection.Remove(entity.EntityLabel);
+                _internal.Remove(key,entity);
+                removed =_collection.Remove(entity.EntityLabel);
                 index = _naturalOrder?.IndexOf(entity.EntityLabel);
                 _naturalOrder?.RemoveAt(index.Value);
             };
             Action undo = () =>
             {
-                _internal.Add(key, entity);
+                _internal.Add(key,entity);
                 _collection.Add(entity.EntityLabel, entity);
                 _naturalOrder?.Insert(index.Value, entity.EntityLabel);
             };
@@ -366,8 +381,8 @@ namespace Xbim.Common.Model
 
         public IEnumerator<IPersistEntity> GetEnumerator()
         {
-            if (_naturalOrder != null)
-                return new NaturalOrderEnumerator(_naturalOrder, _collection);
+            if(_naturalOrder!=null)
+                return new NaturalOrderEnumerator(_naturalOrder,_collection);
             return _collection.Values.GetEnumerator();
         }
 
@@ -385,7 +400,7 @@ namespace Xbim.Common.Model
                 _naturalOrder.Clear();
             }
         }
-
+              
 
         private class NaturalOrderEnumerator : IEnumerator<IPersistEntity>
         {
@@ -393,7 +408,7 @@ namespace Xbim.Common.Model
             private readonly List<int> _naturalOrder;
             private int _current;
             private IPersistEntity _currentEntity;
-            public NaturalOrderEnumerator(List<int> naturalOrder, Dictionary<int, IPersistEntity> entities)
+            public NaturalOrderEnumerator(List<int> naturalOrder, Dictionary<int,IPersistEntity> entities)
             {
                 _naturalOrder = naturalOrder;
                 _entities = entities;
@@ -402,12 +417,12 @@ namespace Xbim.Common.Model
 
             public void Dispose()
             {
-
+                
             }
 
             public bool MoveNext()
-            {
-                while (++_current < _naturalOrder.Count)
+            {               
+                while (++_current < _naturalOrder.Count )
                 {
                     if (_entities.TryGetValue(_naturalOrder[_current], out _currentEntity))
                         return true;
@@ -425,7 +440,7 @@ namespace Xbim.Common.Model
             public IPersistEntity Current
             {
                 get { return _currentEntity; }
-            }
+            } 
 
             object IEnumerator.Current
             {

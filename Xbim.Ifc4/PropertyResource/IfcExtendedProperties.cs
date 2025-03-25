@@ -53,6 +53,7 @@ namespace Xbim.Ifc4.PropertyResource
 		IEnumerable<IIfcProperty> IIfcExtendedProperties.Properties { 
 			get { return new Common.Collections.ProxyItemSet<IfcProperty, IIfcProperty>( @Properties); } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

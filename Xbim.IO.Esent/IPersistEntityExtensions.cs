@@ -7,8 +7,6 @@ using Xbim.Common.Metadata;
 using Xbim.IO.Esent;
 using Xbim.IO.Step21;
 using Xbim.IO.Step21.Parser;
-using Microsoft.Extensions.Logging;
-using Xbim.Common.Configuration;
 
 namespace Xbim.IO
 {
@@ -118,7 +116,6 @@ namespace Xbim.IO
         //    tw.WriteLine();
         //}
 
-        static ILoggerFactory loggerFactory = XbimServices.Current.GetLoggerFactory();
         internal static XbimInstanceHandle GetHandle(this IPersistEntity entity)
         {
             return new XbimInstanceHandle(entity);
@@ -395,7 +392,7 @@ namespace Xbim.IO
         {
             var action = (P21ParseAction)br.ReadByte();
 
-            var parserState = new XbimParserState(entity, loggerFactory);
+            var parserState = new XbimParserState(entity);
             while (action != P21ParseAction.EndEntity)
             {
                 switch (action)
@@ -488,7 +485,7 @@ namespace Xbim.IO
                         parserState.EndEntity();
                         break;
                     case P21ParseAction.NewEntity:
-                        parserState = new XbimParserState(entity, loggerFactory);
+                        parserState = new XbimParserState(entity);
                         break;
                     default:
                         throw new XbimException("Invalid Property Record #" + entity.EntityLabel + " EntityType: " + entity.GetType().Name);

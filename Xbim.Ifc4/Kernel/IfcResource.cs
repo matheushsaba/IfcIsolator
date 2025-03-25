@@ -50,6 +50,7 @@ namespace Xbim.Ifc4.Kernel
 			get { return @LongDescription; } 
 			set { LongDescription = value;}
 		}	
+		 
 		IEnumerable<IIfcRelAssignsToResource> IIfcResource.ResourceOf {  get { return @ResourceOf; } }
 		#endregion
 

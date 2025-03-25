@@ -43,6 +43,7 @@ namespace Xbim.Ifc4.TopologyResource
 			get { return @ParentEdge; } 
 			set { ParentEdge = value as IfcEdge;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

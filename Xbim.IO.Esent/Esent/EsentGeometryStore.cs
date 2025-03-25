@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using Xbim.Common.Configuration;
 using Xbim.Common.Geometry;
 using static Xbim.IO.Esent.EsentModel;
 
@@ -8,7 +7,7 @@ namespace Xbim.IO.Esent
 {
     internal class EsentGeometryStore : IGeometryStore
     {
-        private ILogger Log;
+        private ILogger Log => _esentModel.Logger;
 
         private readonly EsentModel _esentModel;
 
@@ -20,9 +19,6 @@ namespace Xbim.IO.Esent
         public EsentGeometryStore(EsentModel esentModel )
         {           
             _esentModel = esentModel;
-            var logFactory = XbimServices.Current.GetLoggerFactory();
-            Log = logFactory.CreateLogger<EsentGeometryStore>(); 
-
         }
 
         public EsentModel Model

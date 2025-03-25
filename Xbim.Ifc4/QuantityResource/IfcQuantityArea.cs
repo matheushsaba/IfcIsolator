@@ -49,6 +49,7 @@ namespace Xbim.Ifc4.QuantityResource
 			get { return @Formula; } 
 			set { Formula = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

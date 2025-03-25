@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xbim.Common.Enumerations;
 using Xbim.Common.ExpressValidation;
@@ -46,7 +45,7 @@ namespace Xbim.Essentials.Tests
             {
                 using (var txn = model.BeginTransaction())
                 {
-                    var c = new EntityCreator(model);
+                    var c = new Create(model);
                     var unit = c.ContextDependentUnit(u =>
                     {
                         u.UnitType = IfcUnitEnum.USERDEFINED;
@@ -108,27 +107,6 @@ namespace Xbim.Essentials.Tests
                 };
                 var e2 = v.Validate(model.Instances[202]);
                 foreach (var validationResult in new IfcValidationReporter(e2))
-                {
-                    Debug.WriteLine(validationResult);
-                }
-            }
-        }
-
-        [TestMethod]
-        public void ValidatesBlenderBIM()
-        {
-            using (var model = IfcStore.Open("TestSourceFiles\\IfcOpenShell-Issue2499.ifc", null, 0))
-            {
-
-                var v = new Validator
-                {
-                    ValidateLevel = ValidationFlags.All,
-                    CreateEntityHierarchy = true
-                };
-                var result = v.Validate(model.Instances);
-
-                result.Should().HaveCountGreaterThan(0);
-                foreach (var validationResult in new IfcValidationReporter(result))
                 {
                     Debug.WriteLine(validationResult);
                 }

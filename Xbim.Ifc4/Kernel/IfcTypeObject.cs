@@ -48,6 +48,7 @@ namespace Xbim.Ifc4.Kernel
 		IItemSet<IIfcPropertySetDefinition> IIfcTypeObject.HasPropertySets { 
 			get { return new Common.Collections.ProxyItemSet<IfcPropertySetDefinition, IIfcPropertySetDefinition>( @HasPropertySets); } 
 		}	
+		 
 		IEnumerable<IIfcRelDefinesByType> IIfcTypeObject.Types {  get { return @Types; } }
 		#endregion
 

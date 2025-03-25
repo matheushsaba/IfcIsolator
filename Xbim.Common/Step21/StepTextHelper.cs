@@ -6,7 +6,7 @@ namespace Xbim.IO.Step21
 {
     public static class StepText
     {
-        internal static readonly CultureInfo DoubleCulture = new CultureInfo("en-US", false); // false - because we shouldn't use overriden settings
+        internal static readonly CultureInfo DoubleCulture = new CultureInfo("en-US");
         public static double ToDouble(this string val)
         {
             switch (val)
@@ -18,12 +18,7 @@ namespace Xbim.IO.Step21
                 case "-1.#IND":
                     return double.NaN;
             }
-
-            if (double.TryParse(val, NumberStyles.Any, DoubleCulture, out double result))
-            {
-                return result;
-            }
-            return double.NaN;
+            return Convert.ToDouble(val, DoubleCulture);
         }
 
         public static string ToPart21(this string source)

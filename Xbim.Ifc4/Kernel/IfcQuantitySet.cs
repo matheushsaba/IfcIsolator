@@ -36,6 +36,7 @@ namespace Xbim.Ifc4.Kernel
 	public abstract partial class @IfcQuantitySet : IfcPropertySetDefinition, IIfcQuantitySet, IEquatable<@IfcQuantitySet>
 	{
 		#region IIfcQuantitySet explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

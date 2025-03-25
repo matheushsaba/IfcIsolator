@@ -37,6 +37,7 @@ namespace Xbim.Ifc4.PresentationAppearanceResource
 	public  partial class @IfcExternallyDefinedTextFont : IfcExternalReference, IInstantiableEntity, IIfcExternallyDefinedTextFont, IEquatable<@IfcExternallyDefinedTextFont>
 	{
 		#region IIfcExternallyDefinedTextFont explicit implementation
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

@@ -41,6 +41,7 @@ namespace Xbim.Ifc4.MaterialResource
 		IItemSet<IfcLengthMeasure> IIfcMaterialProfileWithOffsets.OffsetValues { 
 			get { return @OffsetValues; } 
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

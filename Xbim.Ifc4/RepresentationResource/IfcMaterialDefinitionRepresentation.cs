@@ -44,6 +44,7 @@ namespace Xbim.Ifc4.RepresentationResource
 			get { return @RepresentedMaterial; } 
 			set { RepresentedMaterial = value as IfcMaterial;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

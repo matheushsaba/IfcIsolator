@@ -197,8 +197,8 @@ namespace Xbim.Common.Step21
 
         public void SetTimeStampNow()
         {
-            var now = DateTimeOffset.Now;
-            _timeStamp = string.Format(now.ToString("o"));
+            var now = DateTime.Now;
+            _timeStamp = string.Format(now.ToString("s"));
         }
 
         private readonly ObservableCollection<string> _authorName = new ObservableCollection<string>();
@@ -684,10 +684,7 @@ namespace Xbim.Common.Step21
             {                
                 foreach (var schema in FileSchema.Schemas)
                 {
-                    if (schema.StartsWith("Ifc4x3", StringComparison.OrdinalIgnoreCase)) //return this as 2x3
-                        return XbimSchemaVersion.Ifc4x3;
-                    if (string.Compare(schema, "Ifc4", StringComparison.OrdinalIgnoreCase) == 0 ||
-                        schema.StartsWith("Ifc4RC", StringComparison.OrdinalIgnoreCase))
+                    if (string.Compare(schema, "Ifc4", StringComparison.OrdinalIgnoreCase) == 0)
                         return XbimSchemaVersion.Ifc4;                    
                     if (schema.StartsWith("Ifc2x", StringComparison.OrdinalIgnoreCase)) //return this as 2x3
                         return XbimSchemaVersion.Ifc2X3;

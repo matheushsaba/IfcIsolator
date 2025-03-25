@@ -80,6 +80,7 @@ namespace Xbim.Ifc4.ProcessExtension
 			get { return @FinishTime; } 
 			set { FinishTime = value;}
 		}	
+		 
 		#endregion
 
 		//internal constructor makes sure that objects are not created outside of the model/ assembly controlled area

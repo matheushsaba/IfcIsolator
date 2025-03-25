@@ -38,6 +38,7 @@ namespace Xbim.Ifc4.Kernel
 	public abstract partial class @IfcPropertyDefinition : IfcRoot, IIfcPropertyDefinition, IEquatable<@IfcPropertyDefinition>
 	{
 		#region IIfcPropertyDefinition explicit implementation
+		 
 		IEnumerable<IIfcRelDeclares> IIfcPropertyDefinition.HasContext {  get { return @HasContext; } }
 		IEnumerable<IIfcRelAssociates> IIfcPropertyDefinition.HasAssociations {  get { return @HasAssociations; } }
 		#endregion
