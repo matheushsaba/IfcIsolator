@@ -200,3 +200,6 @@ FakesAssemblies/
 
 SharedFileVersionInfo.cs
 *.jfm
+
+
+IfcIsolatorTests/TestFiles/TestFilesOutput/*.ifc

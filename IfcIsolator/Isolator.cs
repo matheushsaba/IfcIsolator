@@ -12,6 +12,11 @@ namespace IfcIsolator
 
         public static void SplitByEntityLabels(string sourceFilePath, string outputFolderPath, int[] entityLabels)
         {
+            if (!Path.Exists(sourceFilePath) || !Path.Exists(outputFolderPath))
+            {
+                return;
+            }
+
             using (var sourceModel = IfcStore.Open(sourceFilePath))
             {
                 var products = GetProductsByEntityLabel(sourceModel, entityLabels);
@@ -51,7 +56,7 @@ namespace IfcIsolator
 
         private static HashSet<IIfcProduct> GetProductsByEntityLabel(IModel model, int[] entityLabels)
         {
-            var entityLabelsSet = new HashSet<int>(entityLabels);
+            var entityLabelsSet = entityLabels.ToHashSet();
             var collectedProducts = new HashSet<IIfcProduct>();
 
             var entityProducts = model
