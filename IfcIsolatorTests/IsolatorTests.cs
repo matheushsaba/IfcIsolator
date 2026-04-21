@@ -112,5 +112,31 @@ namespace IfcIsolatorTests
                 products.Select(x => x.GlobalId.ToString()).ToHashSet().SetEquals(productGuids).Should().BeTrue();
             }
         }
+        
+                
+        [Fact]
+        public void Isolate_Ifc4x3()
+        {
+            // ConsoleRunner.exe "C:\\Users\\Matheus\\Desktop\\TestFiles\\Ifc4_Revit_STR.ifc" "C:\\Users\\Matheus\\Desktop\\TestFiles" 328
+            var fileName = "KIT-Simple-Road-Test-Web-IFC4x3_RC2";
+            var sourceFilePath = FileManager.GetIfcTestFilePath(fileName);
+            var outputFolderPath = FileManager.GetTestFilesOutputFolderPath();
+            var entityLabels = new int[] { 1417 };
+
+            Isolator.SplitByEntityLabels(sourceFilePath, outputFolderPath, entityLabels);
+
+            var outputFilePath = FileManager.GetIfcTestFileOutputPath(fileName);
+            using (var resultingModel = IfcStore.Open(outputFilePath))
+            {
+                var products = resultingModel
+                    .Instances
+                    .OfType<IIfcProduct>()
+                    .Where(x => x is not IIfcSite)
+                    .ToList();
+
+                products.Count.Should().Be(1);
+                products.First().GlobalId.ToString().Should().Be("2dG5Zfp9f3Gx9LmmVqVMZE");
+            }
+        }
     }
 }
