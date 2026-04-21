@@ -1,4 +1,6 @@
-﻿namespace IfcIsolator;
+﻿using IfcIsolator;
+
+namespace IfcIsolatorTerminal;
 
 internal class Program
 {
