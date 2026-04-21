@@ -43,6 +43,7 @@ namespace IfcIsolator
                     {
                         var map = new XbimInstanceHandleMap(sourceModel, targetModel);
                         targetModel.CustomInsertCopy(products, true, false, map, true);
+                        Ifc4x3SpatialHierarchyFallback.Restore(targetModel, sourceModel, products, map, sourceFilePath);
                         txn.Commit();
                     }
                     targetModel.Header.FileDescription = sourceModel.Header.FileDescription;
