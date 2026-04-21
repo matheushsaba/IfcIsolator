@@ -19,7 +19,11 @@ internal class Program
         string outputPath = args[1];
         string labelsRaw = args[2]; // e.g., "10 20 30"
 
+        var entityLabels = labelsRaw
+            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(int.Parse);
+
         // Now call into your IfcSplitter logic
-        Isolator.SplitByEntityLabels(inputPath, outputPath, labelsRaw);
+        Isolator.SplitByEntityLabels(inputPath, outputPath, entityLabels);
     }
 }

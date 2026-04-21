@@ -11,12 +11,7 @@ public static class Isolator
     const string IFC_FILE_EXTENSION = ".ifc";
     const string OUTPUT_FILE_SUFFIX = "_Isolated";
 
-    public static void SplitByEntityLabels(string sourceFilePath, string outputFolderPath, string entityLabels)
-    {
-        SplitByEntityLabels(sourceFilePath, outputFolderPath, ParseEntityLabels(entityLabels));
-    }
-
-    public static void SplitByEntityLabels(string sourceFilePath, string outputFolderPath, int[] entityLabels)
+    public static void SplitByEntityLabels(string sourceFilePath, string outputFolderPath, IEnumerable<int> entityLabels)
     {
         if (!Path.Exists(sourceFilePath) || !Path.Exists(outputFolderPath))
         {
@@ -66,7 +61,7 @@ public static class Isolator
         }
     }
 
-    private static HashSet<IIfcProduct> GetProductsByEntityLabel(IModel model, int[] entityLabels)
+    private static HashSet<IIfcProduct> GetProductsByEntityLabel(IModel model, IEnumerable<int> entityLabels)
     {
         var entityLabelsSet = entityLabels.ToHashSet();
         var collectedProducts = new HashSet<IIfcProduct>();
@@ -86,14 +81,6 @@ public static class Isolator
         }
 
         return collectedProducts;
-    }
-
-    private static int[] ParseEntityLabels(string entityLabels)
-    {
-        return entityLabels
-            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(int.Parse)
-            .ToArray();
     }
 
     private static HashSet<IIfcProduct> GetProductHierarchyRecursively(IIfcObjectDefinition ifcObjectDefinition, HashSet<IIfcProduct> collectedProducts)
