@@ -7,9 +7,11 @@
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc4x3IsolatorTests.Isolate_Beam&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=10bd65ed_002Ddcda_002D4fb7_002D8357_002D276db94e1976/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Ifc4x3IsolatorTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc4x3IsolatorTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e0537e34_002D7a7a_002D440e_002D8e08_002D06ce5f41da14/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;And&gt;&#xD;
+    &lt;Namespace&gt;IfcIsolatorTests.Tests&lt;/Namespace&gt;&#xD;
+    &lt;Project Location="C:\Users\Matheus\source\repos\IfcIsolator_V2\IfcIsolatorTests" Presentation="&amp;lt;IfcIsolatorTests&amp;gt;" /&gt;&#xD;
+  &lt;/And&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	
 	</wpf:ResourceDictionary>

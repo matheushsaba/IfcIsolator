@@ -5,6 +5,8 @@ VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IfcIsolatorTerminal", "IfcIsolator\IfcIsolatorTerminal.csproj", "{FFFB31DC-7459-4BDB-81A1-DE1E1ED4322B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IfcIsolatorLibrary", "IfcIsolatorLibrary\IfcIsolatorLibrary.csproj", "{CA96E43A-C685-4B16-91E4-1D9104864D58}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IfcIsolatorTests", "IfcIsolatorTests\IfcIsolatorTests.csproj", "{4FEC5055-9370-4557-BC87-592395159CD3}"
 EndProject
 Global
@@ -17,6 +19,10 @@ Global
 		{FFFB31DC-7459-4BDB-81A1-DE1E1ED4322B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFFB31DC-7459-4BDB-81A1-DE1E1ED4322B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFFB31DC-7459-4BDB-81A1-DE1E1ED4322B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA96E43A-C685-4B16-91E4-1D9104864D58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA96E43A-C685-4B16-91E4-1D9104864D58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA96E43A-C685-4B16-91E4-1D9104864D58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA96E43A-C685-4B16-91E4-1D9104864D58}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FEC5055-9370-4557-BC87-592395159CD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FEC5055-9370-4557-BC87-592395159CD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FEC5055-9370-4557-BC87-592395159CD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
