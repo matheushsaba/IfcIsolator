@@ -1,4 +1,5 @@
 ﻿using Xbim.Common;
+using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
@@ -19,6 +20,7 @@ namespace IfcIsolator
 
             using (var sourceModel = IfcStore.Open(sourceFilePath))
             {
+                var needsIfc4x3Fallback = sourceModel.SchemaVersion == XbimSchemaVersion.Ifc4x3;
                 var products = GetProductsByEntityLabel(sourceModel, entityLabels);
                 var fileName = Path.GetFileNameWithoutExtension(sourceFilePath);
                 var outputFileName = fileName + OUTPUT_FILE_SUFFIX + IFC_FILE_EXTENSION;
@@ -43,7 +45,11 @@ namespace IfcIsolator
                     {
                         var map = new XbimInstanceHandleMap(sourceModel, targetModel);
                         targetModel.CustomInsertCopy(products, true, false, map, true);
-                        Ifc4x3SpatialHierarchyFallback.Restore(targetModel, sourceModel, products, map, sourceFilePath);
+                        if (needsIfc4x3Fallback)
+                        {
+                            Ifc4x3SpatialHierarchyFallback.Restore(targetModel, sourceModel, products, map, sourceFilePath);
+                        }
+
                         txn.Commit();
                     }
                     targetModel.Header.FileDescription = sourceModel.Header.FileDescription;

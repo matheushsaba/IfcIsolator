@@ -32,7 +32,8 @@ namespace IfcIsolator
                 return;
 
             var entities = ReadStepEntities(sourceFilePath);
-            var hierarchy = BuildHierarchy(sourceModel, selectedProducts, entities);
+            var hierarchyIndex = BuildHierarchyIndex(entities.Values);
+            var hierarchy = BuildHierarchy(sourceModel, selectedProducts, entities, hierarchyIndex);
 
             if (!hierarchy.NeedsFallback)
                 return;
@@ -45,7 +46,8 @@ namespace IfcIsolator
         private static HierarchyBuildResult BuildHierarchy(
             IModel sourceModel,
             IEnumerable<IIfcProduct> selectedProducts,
-            IReadOnlyDictionary<int, StepEntity> entities)
+            IReadOnlyDictionary<int, StepEntity> entities,
+            StepHierarchyIndex hierarchyIndex)
         {
             var links = new List<HierarchyLink>();
             var parsedAncestorLabels = new HashSet<int>();
@@ -54,25 +56,22 @@ namespace IfcIsolator
             foreach (var product in selectedProducts)
             {
                 var currentLabel = product.EntityLabel;
-                var containment = FindContainingSpatialRelation(entities.Values, currentLabel);
-                if (containment == null)
+                if (!hierarchyIndex.ContainmentByChild.TryGetValue(currentLabel, out var containment))
                     continue;
 
-                links.Add(new HierarchyLink(HierarchyLinkKind.Contains, containment.Value.Relation.Label,
-                    containment.Value.ParentLabel, currentLabel));
-                TrackAncestor(containment.Value.ParentLabel);
+                links.Add(new HierarchyLink(HierarchyLinkKind.Contains, containment.Relation.Label,
+                    containment.ParentLabel, currentLabel));
+                TrackAncestor(containment.ParentLabel);
 
-                currentLabel = containment.Value.ParentLabel;
-                while (true)
+                currentLabel = containment.ParentLabel;
+                var visitedLabels = new HashSet<int>();
+                while (visitedLabels.Add(currentLabel) &&
+                       hierarchyIndex.AggregationByChild.TryGetValue(currentLabel, out var aggregate))
                 {
-                    var aggregate = FindParentAggregation(entities.Values, currentLabel);
-                    if (aggregate == null)
-                        break;
-
-                    links.Add(new HierarchyLink(HierarchyLinkKind.Aggregates, aggregate.Value.Relation.Label,
-                        aggregate.Value.ParentLabel, currentLabel));
-                    TrackAncestor(aggregate.Value.ParentLabel);
-                    currentLabel = aggregate.Value.ParentLabel;
+                    links.Add(new HierarchyLink(HierarchyLinkKind.Aggregates, aggregate.Relation.Label,
+                        aggregate.ParentLabel, currentLabel));
+                    TrackAncestor(aggregate.ParentLabel);
+                    currentLabel = aggregate.ParentLabel;
                 }
             }
 
@@ -95,6 +94,45 @@ namespace IfcIsolator
                 if (entity.Type.Equals("IFCFACILITYPART", StringComparison.OrdinalIgnoreCase))
                     missingFacilityPartLabels.Add(label);
             }
+        }
+
+        private static StepHierarchyIndex BuildHierarchyIndex(IEnumerable<StepEntity> entities)
+        {
+            var containmentByChild = new Dictionary<int, (StepEntity Relation, int ParentLabel)>();
+            var aggregationByChild = new Dictionary<int, (StepEntity Relation, int ParentLabel)>();
+
+            foreach (var entity in entities)
+            {
+                if (entity.Type.Equals("IFCRELCONTAINEDINSPATIALSTRUCTURE", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (entity.Arguments.Count < 6)
+                        continue;
+
+                    var parentLabel = ExtractSingleReference(entity.Arguments[5]);
+                    if (!parentLabel.HasValue)
+                        continue;
+
+                    foreach (var childLabel in ExtractReferences(entity.Arguments[4]))
+                        containmentByChild.TryAdd(childLabel, (entity, parentLabel.Value));
+
+                    continue;
+                }
+
+                if (entity.Type.Equals("IFCRELAGGREGATES", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (entity.Arguments.Count < 6)
+                        continue;
+
+                    var parentLabel = ExtractSingleReference(entity.Arguments[4]);
+                    if (!parentLabel.HasValue)
+                        continue;
+
+                    foreach (var childLabel in ExtractReferences(entity.Arguments[5]))
+                        aggregationByChild.TryAdd(childLabel, (entity, parentLabel.Value));
+                }
+            }
+
+            return new StepHierarchyIndex(containmentByChild, aggregationByChild);
         }
 
         private static void CopyParsedAncestors(
@@ -191,46 +229,6 @@ namespace IfcIsolator
             return map.TryGetValue(new XbimInstanceHandle(sourceEntity), out var targetHandle)
                 ? targetHandle.GetEntity()
                 : null;
-        }
-
-        private static (StepEntity Relation, int ParentLabel)? FindContainingSpatialRelation(
-            IEnumerable<StepEntity> entities,
-            int childLabel)
-        {
-            foreach (var entity in entities.Where(e => e.Type.Equals("IFCRELCONTAINEDINSPATIALSTRUCTURE", StringComparison.OrdinalIgnoreCase)))
-            {
-                if (entity.Arguments.Count < 6 ||
-                    !ExtractReferences(entity.Arguments[4]).Contains(childLabel))
-                {
-                    continue;
-                }
-
-                var parentLabel = ExtractSingleReference(entity.Arguments[5]);
-                if (parentLabel.HasValue)
-                    return (entity, parentLabel.Value);
-            }
-
-            return null;
-        }
-
-        private static (StepEntity Relation, int ParentLabel)? FindParentAggregation(
-            IEnumerable<StepEntity> entities,
-            int childLabel)
-        {
-            foreach (var entity in entities.Where(e => e.Type.Equals("IFCRELAGGREGATES", StringComparison.OrdinalIgnoreCase)))
-            {
-                if (entity.Arguments.Count < 6 ||
-                    !ExtractReferences(entity.Arguments[5]).Contains(childLabel))
-                {
-                    continue;
-                }
-
-                var parentLabel = ExtractSingleReference(entity.Arguments[4]);
-                if (parentLabel.HasValue)
-                    return (entity, parentLabel.Value);
-            }
-
-            return null;
         }
 
         private static Dictionary<int, StepEntity> ReadStepEntities(string filePath)
@@ -348,6 +346,10 @@ namespace IfcIsolator
         }
 
         private sealed record StepEntity(int Label, string Type, List<string> Arguments);
+
+        private sealed record StepHierarchyIndex(
+            IReadOnlyDictionary<int, (StepEntity Relation, int ParentLabel)> ContainmentByChild,
+            IReadOnlyDictionary<int, (StepEntity Relation, int ParentLabel)> AggregationByChild);
 
         private sealed record FacilityPartData(
             int Label,
