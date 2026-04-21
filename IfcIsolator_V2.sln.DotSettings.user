@@ -2,5 +2,7 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2a9feb78_002D9b87_002D4714_002Da48a_002D8bc885399228/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Isolate_Wall" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Wall&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_MultipleWalls&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Space&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

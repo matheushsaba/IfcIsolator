@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using Xbim.Common;
 using Xbim.Common.Metadata;
@@ -141,7 +143,7 @@ namespace IfcIsolator
                         //if there are no IfcElements return what is in there with no care
                         if (elementsToRemove.Any())
                             //return original values excluding elements not included in the primary set
-                            return persistEntities.Except(elementsToRemove).ToList();
+                            return CreateFilteredExpressEnumerable(property, parentObject, entities, persistEntities, elementsToRemove);
                     }
                 }
             }
@@ -166,6 +168,51 @@ namespace IfcIsolator
 
             //return the value for anything else
             return property.PropertyInfo.GetValue(parentObject, null);
+        }
+
+        private static object CreateFilteredExpressEnumerable(
+            ExpressMetaProperty property,
+            object parentObject,
+            IEnumerable<IPersist> originalEntities,
+            IEnumerable<IPersist> persistEntities,
+            IEnumerable<IIfcProduct> elementsToRemove)
+        {
+            var filteredEntities = persistEntities.Except(elementsToRemove).ToList();
+            var itemSetType = originalEntities.GetType();
+
+            if (parentObject is not IPersistEntity owningEntity ||
+                property.EntityAttribute == null ||
+                itemSetType.IsAbstract ||
+                !typeof(IExpressEnumerable).IsAssignableFrom(itemSetType))
+            {
+                return filteredEntities;
+            }
+
+            var itemSet = Activator.CreateInstance(
+                itemSetType,
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                binder: null,
+                args: new object[] { owningEntity, filteredEntities.Count, property.EntityAttribute.Order },
+                culture: null);
+
+            if (itemSet == null || itemSetType.GetGenericArguments().Length != 1)
+                return filteredEntities;
+
+            var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemSetType.GetGenericArguments()[0]))!;
+            foreach (var entity in filteredEntities)
+                typedList.Add(entity);
+
+            var internalField = itemSetType
+                .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Concat(itemSetType.BaseType?.GetFields(BindingFlags.Instance | BindingFlags.NonPublic) ?? Enumerable.Empty<FieldInfo>())
+                .FirstOrDefault(f => f.Name == "<Internal>k__BackingField");
+
+            if (internalField == null)
+                return filteredEntities;
+
+            internalField.SetValue(itemSet, typedList);
+
+            return itemSet;
         }
 
         private static IEnumerable<IIfcRelVoidsElement> GetFeatureRelations(IEnumerable<IIfcProduct> products)
