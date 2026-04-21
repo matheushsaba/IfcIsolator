@@ -5,7 +5,10 @@ using System.Reflection;
 
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.Common.Step21;
 using Xbim.Ifc4.Interfaces;
+
+using Ifc4x3RelReferencedInSpatialStructure = Xbim.Ifc4x3.ProductExtension.IfcRelReferencedInSpatialStructure;
 
 namespace IfcIsolator
 {
@@ -76,10 +79,13 @@ namespace IfcIsolator
                     context.PrimaryElements.Any(e => OrEmpty(r.RelatedElements).Contains(e))).ToList();
             var spatialRefs =
                 model.Instances.Where<IIfcRelReferencedInSpatialStructure>(
-                    r => r.RelatingStructure != null &&
-                        context.PrimaryElements.Any(e => OrEmpty(r.RelatedElements).Contains(e))).ToList();
+                    r => GetReferencedRelatingStructure(r) != null &&
+                        context.PrimaryElements.Any(e => GetReferencedRelatedElements(r).Contains(e))).ToList();
             var bottomSpatialHierarchy =
-                spatialRels.Select(r => r.RelatingStructure).Union(spatialRefs.Select(r => r.RelatingStructure)).ToList();
+                spatialRels.Select(r => r.RelatingStructure)
+                    .Union(spatialRefs.Select(GetReferencedRelatingStructure))
+                    .OfType<IIfcSpatialElement>()
+                    .ToList();
 
             if (acceptIsolatedSpatialElements)
             {
@@ -90,13 +96,33 @@ namespace IfcIsolator
             }
 
             var spatialAggregations = GetUpstreamHierarchy(bottomSpatialHierarchy, model).ToList();
+            var upstreamSpatialHierarchy = spatialAggregations.Select(r => r.RelatingObject).OfType<IIfcSpatialElement>().ToList();
+            var spatialHierarchy = bottomSpatialHierarchy.Union(upstreamSpatialHierarchy).ToList();
+            var useIfc4x3SpatialContext = model.SchemaVersion == XbimSchemaVersion.Ifc4x3;
+            var spatialContextRefs = useIfc4x3SpatialContext
+                ? GetSpatialReferences(spatialHierarchy, model).ToList()
+                : new List<IIfcRelReferencedInSpatialStructure>();
+            var spatialReferenceProducts = spatialContextRefs.SelectMany(GetReferencedRelatedElements).ToList();
+            var directSiteAggregations = useIfc4x3SpatialContext &&
+                bottomSpatialHierarchy.Any() &&
+                bottomSpatialHierarchy.All(s => s is IIfcSite)
+                ? GetDirectSpatialAggregations(bottomSpatialHierarchy, model).ToList()
+                : new List<IIfcRelAggregates>();
+            var directSiteChildren = directSiteAggregations
+                .SelectMany(r => OrEmpty(r.RelatedObjects))
+                .OfType<IIfcSpatialElement>()
+                .ToList();
 
             //add all spatial elements from bottom and from upstream hierarchy
             context.PrimaryElements.AddRange(bottomSpatialHierarchy);
-            context.PrimaryElements.AddRange(spatialAggregations.Select(r => r.RelatingObject).OfType<IIfcProduct>());
+            context.PrimaryElements.AddRange(upstreamSpatialHierarchy);
+            context.PrimaryElements.AddRange(spatialReferenceProducts);
+            context.PrimaryElements.AddRange(directSiteChildren);
             roots.AddRange(spatialAggregations);
+            roots.AddRange(directSiteAggregations);
             roots.AddRange(spatialRels);
             roots.AddRange(spatialRefs);
+            roots.AddRange(spatialContextRefs);
 
             //we should add any feature elements used to subtract mass from a product
             var featureRels = GetFeatureRelations(context.PrimaryElements).ToList();
@@ -293,9 +319,62 @@ namespace IfcIsolator
             }
         }
 
+        private static IEnumerable<IIfcRelAggregates> GetDirectSpatialAggregations(IEnumerable<IIfcSpatialElement> spatialStructureElements, IModel model)
+        {
+            var elements = spatialStructureElements.ToList();
+            if (!elements.Any())
+                yield break;
+
+            var rels = model.Instances.Where<IIfcRelAggregates>(r =>
+                r.RelatingObject != null &&
+                elements.Any(s => Equals(r.RelatingObject, s)) &&
+                OrEmpty(r.RelatedObjects).OfType<IIfcSpatialElement>().Any()).ToList();
+
+            foreach (var rel in rels)
+                yield return rel;
+        }
+
+        private static IEnumerable<IIfcRelReferencedInSpatialStructure> GetSpatialReferences(IEnumerable<IIfcSpatialElement> spatialStructureElements, IModel model)
+        {
+            var elements = spatialStructureElements.ToList();
+            if (!elements.Any())
+                yield break;
+
+            var rels = model.Instances.Where<IIfcRelReferencedInSpatialStructure>(r =>
+                GetReferencedRelatingStructure(r) != null &&
+                elements.Any(s => Equals(GetReferencedRelatingStructure(r), s))).ToList();
+
+            foreach (var rel in rels)
+                yield return rel;
+        }
+
         private static IEnumerable<T> OrEmpty<T>(IEnumerable<T>? source)
         {
             return source ?? Enumerable.Empty<T>();
+        }
+
+        private static IEnumerable<IIfcProduct> GetReferencedRelatedElements(IIfcRelReferencedInSpatialStructure relation)
+        {
+            try
+            {
+                return OrEmpty(relation.RelatedElements);
+            }
+            catch (NotImplementedException) when (relation is Ifc4x3RelReferencedInSpatialStructure ifc4x3Relation)
+            {
+                return OrEmpty(ifc4x3Relation.RelatedElements).OfType<IIfcProduct>();
+            }
+        }
+
+        private static IIfcSpatialElement? GetReferencedRelatingStructure(IIfcRelReferencedInSpatialStructure relation)
+        {
+            try
+            {
+                return relation.RelatingStructure;
+            }
+            catch (NotImplementedException) when (relation is Ifc4x3RelReferencedInSpatialStructure ifc4x3Relation)
+            {
+                return ifc4x3Relation.RelatingStructure;
+            }
         }
 
         private static IEnumerable<IIfcProduct> OneOrEmpty(IIfcProduct? product)
