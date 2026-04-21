@@ -58,6 +58,29 @@ namespace IfcIsolatorTests
                 products.First().GlobalId.ToString().Should().Be("0wWrXKmlH9o9quybISZT88");
             }
         }
+        
+        [Fact]
+        public void Isolate_Space_2()
+        {
+            var fileName = "DigitalHub_FM-ARC_v2";
+            var sourceFilePath = FileManager.GetIfcTestFilePath(fileName);
+            var outputFolderPath = FileManager.GetTestFilesOutputFolderPath();
+            var entityLabels = new int[] { 6967 };
+
+            Isolator.SplitByEntityLabels(sourceFilePath, outputFolderPath, entityLabels);
+
+            var outputFilePath = FileManager.GetIfcTestFileOutputPath(fileName);
+            using (var resultingModel = IfcStore.Open(outputFilePath))
+            {
+                var products = resultingModel
+                    .Instances
+                    .OfType<IIfcSpace>()
+                    .ToList();
+
+                products.Count.Should().Be(1);
+                products.First().GlobalId.ToString().Should().Be("3DbdJyICv8GP1HEYzu7Wjc");
+            }
+        }
 
         [Fact]
         public void Isolate_MultipleWalls()

@@ -4,5 +4,7 @@
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Wall&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_MultipleWalls&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Space&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Space_2&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Ifc4x3&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
