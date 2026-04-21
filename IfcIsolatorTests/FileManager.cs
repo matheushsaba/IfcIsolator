@@ -1,51 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace IfcIsolatorTests;
 
-namespace IfcIsolatorTests
+internal static class FileManager
 {
-    internal static class FileManager
+    public const string Ifc4FolderName = "Ifc4";
+    public const string Ifc4x3FolderName = "Ifc4x3";
+    public const string Ifc2x3FolderName = "Ifc2x3";
+
+    private const string BasePath = "..\\..\\..\\";
+    private const string IfcExtension = ".ifc";
+    private const string OutputFileSuffix = "_Isolated";
+    private const string TestFilesFolderName = "TestFiles";
+    private const string TestFilesOutputFolderName = "TestFilesOutput";
+
+    public static string GetTestFilesFolderPath()
     {
-        const string BASE_PATH = "..\\..\\..\\";
-        const string IFC_EXTENSION = ".ifc";
-        const string OUTPUT_FILE_SUFFIX = "_Isolated";
-        const string TEST_FILES_FOLDER_NAME = "TestFiles";
-        const string TEST_FILES_OUTPUT_FOLDER_NAME = "TestFilesOutput";
+        return Path.Combine(BasePath, TestFilesFolderName);
+    }
 
-        public static string GetTestFilesFolderPath()
+    public static string GetTestFilesFolderPath(string ifcVersionFolderName)
+    {
+        return Path.Combine(GetTestFilesFolderPath(), ifcVersionFolderName);
+    }
+
+    public static string GetTestFilesOutputFolderPath(string ifcVersionFolderName)
+    {
+        var outputFolderPath = Path.Combine(GetTestFilesFolderPath(ifcVersionFolderName), TestFilesOutputFolderName);
+
+        if (!Directory.Exists(outputFolderPath))
         {
-            return Path.Combine(BASE_PATH, TEST_FILES_FOLDER_NAME);
+            Directory.CreateDirectory(outputFolderPath);
         }
 
-        public static string GetTestFilesOutputFolderPath()
-        {
-            var outputFolderPath = Path.Combine(GetTestFilesFolderPath(), TEST_FILES_OUTPUT_FOLDER_NAME);
+        return outputFolderPath;
+    }
 
-            if (!Directory.Exists(outputFolderPath))
-            {
-                Directory.CreateDirectory(outputFolderPath);
-            }
+    public static string GetIfcTestFilePath(string ifcVersionFolderName, string fileNameWithoutExtension)
+    {
+        var fileNameWithExtension = $"{fileNameWithoutExtension}{IfcExtension}";
+        var filePath = Path.Combine(GetTestFilesFolderPath(ifcVersionFolderName), fileNameWithExtension);
 
-            return outputFolderPath;
-        }
+        return filePath;
+    }
 
-        public static string GetIfcTestFilePath(string fileNameWithoutExtension)
-        {
-            var fileNameWithExtension = $"{fileNameWithoutExtension}{IFC_EXTENSION}";
-            var filePath = Path.Combine(GetTestFilesFolderPath(), fileNameWithExtension);
+    public static string GetIfcTestFileOutputPath(string ifcVersionFolderName, string fileNameWithoutExtension)
+    {
+        var outputPath = GetTestFilesOutputFolderPath(ifcVersionFolderName);
+        var outputFileName = $"{fileNameWithoutExtension}{OutputFileSuffix}{IfcExtension}";
+        var outputFilePath = Path.Combine(outputPath, outputFileName);
 
-            return filePath;
-        }
-
-        public static string GetIfcTestFileOutputPath(string fileNameWithoutExtension)
-        {
-            var outputPath = GetTestFilesOutputFolderPath();
-            var outputFileName = $"{fileNameWithoutExtension}{OUTPUT_FILE_SUFFIX}{IFC_EXTENSION}";
-            var outputFilePath = Path.Combine(outputPath, outputFileName);
-
-            return outputFilePath;
-        }
+        return outputFilePath;
     }
 }

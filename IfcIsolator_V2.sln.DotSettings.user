@@ -1,10 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2a9feb78_002D9b87_002D4714_002Da48a_002D8bc885399228/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Isolate_Wall" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=63b4bfae_002Df498_002D49d3_002D9c6c_002D36d87a57c928/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Ifc4IsolatorTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Wall&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_MultipleWalls&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Space&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Space_2&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.IsolatorTests.Isolate_Ifc4x3&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc2x3IsolatorTests.Isolate_Space&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc2x3IsolatorTests.Isolate_SpaceWithElementsInside&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
