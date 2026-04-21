@@ -72,10 +72,12 @@ namespace IfcIsolator
 
             //we should add spatial hierarchy right here so it brings its attributes as well
             var spatialRels = model.Instances.Where<IIfcRelContainedInSpatialStructure>(
-                r => context.PrimaryElements.Any(e => r.RelatedElements.Contains(e))).ToList();
+                r => r.RelatingStructure != null &&
+                    context.PrimaryElements.Any(e => OrEmpty(r.RelatedElements).Contains(e))).ToList();
             var spatialRefs =
                 model.Instances.Where<IIfcRelReferencedInSpatialStructure>(
-                    r => context.PrimaryElements.Any(e => r.RelatedElements.Contains(e))).ToList();
+                    r => r.RelatingStructure != null &&
+                        context.PrimaryElements.Any(e => OrEmpty(r.RelatedElements).Contains(e))).ToList();
             var bottomSpatialHierarchy =
                 spatialRels.Select(r => r.RelatingStructure).Union(spatialRefs.Select(r => r.RelatingStructure)).ToList();
 
@@ -98,21 +100,21 @@ namespace IfcIsolator
 
             //we should add any feature elements used to subtract mass from a product
             var featureRels = GetFeatureRelations(context.PrimaryElements).ToList();
-            var openings = featureRels.Select(r => r.RelatedOpeningElement);
+            var openings = featureRels.Select(r => r.RelatedOpeningElement).Where(p => p != null);
             context.PrimaryElements.AddRange(openings);
             roots.AddRange(featureRels);
 
             //object types and properties for all primary products (elements and spatial elements)
-            roots.AddRange(context.PrimaryElements.SelectMany(p => p.IsDefinedBy));
-            roots.AddRange(context.PrimaryElements.SelectMany(p => p.IsTypedBy));
+            roots.AddRange(context.PrimaryElements.SelectMany(p => OrEmpty(p.IsDefinedBy)));
+            roots.AddRange(context.PrimaryElements.SelectMany(p => OrEmpty(p.IsTypedBy)));
 
 
 
             //assignmnet to groups will bring in all system aggregarions if defined in the file
-            roots.AddRange(context.PrimaryElements.SelectMany(p => p.HasAssignments));
+            roots.AddRange(context.PrimaryElements.SelectMany(p => OrEmpty(p.HasAssignments)));
 
             //associations with classification, material and documents
-            roots.AddRange(context.PrimaryElements.SelectMany(p => p.HasAssociations));
+            roots.AddRange(context.PrimaryElements.SelectMany(p => OrEmpty(p.HasAssociations)));
 
             return roots;
         }
@@ -228,8 +230,10 @@ namespace IfcIsolator
         private static IEnumerable<IIfcRelDecomposes> GetAggregations(CopyContext context, List<IIfcProduct> products, IModel model)
         {
             context.Decomposition.Clear();
+            var processedProducts = new HashSet<IIfcProduct>();
             while (true)
             {
+                products = products.Where(processedProducts.Add).ToList();
                 if (!products.Any())
                     yield break;
 
@@ -250,14 +254,14 @@ namespace IfcIsolator
                 var relatedProducts = rels.SelectMany(r =>
                 {
                     if (r is IIfcRelAggregates aggr)
-                        return aggr.RelatedObjects.OfType<IIfcProduct>();
+                        return OrEmpty(aggr.RelatedObjects).OfType<IIfcProduct>();
                     if (r is IIfcRelNests nest)
-                        return nest.RelatedObjects.OfType<IIfcProduct>();
+                        return OrEmpty(nest.RelatedObjects).OfType<IIfcProduct>();
                     if (r is IIfcRelProjectsElement prj)
-                        return new IIfcProduct[] { prj.RelatedFeatureElement };
+                        return OneOrEmpty(prj.RelatedFeatureElement);
                     if (r is IIfcRelVoidsElement voids)
-                        return new IIfcProduct[] { voids.RelatedOpeningElement };
-                    return null!;
+                        return OneOrEmpty(voids.RelatedOpeningElement);
+                    return Enumerable.Empty<IIfcProduct>();
                 }).Where(p => p != null).ToList();
 
                 foreach (var rel in rels)
@@ -270,14 +274,17 @@ namespace IfcIsolator
 
         private static IEnumerable<IIfcRelAggregates> GetUpstreamHierarchy(IEnumerable<IIfcSpatialElement> spatialStructureElements, IModel model)
         {
+            var processedElements = new HashSet<IIfcSpatialElement>();
             while (true)
             {
-                var elements = spatialStructureElements.ToList();
+                var elements = spatialStructureElements.Where(processedElements.Add).ToList();
                 if (!elements.Any())
                     yield break;
 
-                var rels = model.Instances.Where<IIfcRelAggregates>(r => elements.Any(s => r.RelatedObjects.Contains(s))).ToList();
-                var decomposing = rels.Select(r => r.RelatingObject).OfType<IIfcSpatialStructureElement>();
+                var rels = model.Instances.Where<IIfcRelAggregates>(r =>
+                    r.RelatingObject != null &&
+                    elements.Any(s => OrEmpty(r.RelatedObjects).Contains(s))).ToList();
+                var decomposing = rels.Select(r => r.RelatingObject).OfType<IIfcSpatialElement>();
 
                 foreach (var rel in rels)
                     yield return rel;
@@ -286,9 +293,19 @@ namespace IfcIsolator
             }
         }
 
+        private static IEnumerable<T> OrEmpty<T>(IEnumerable<T>? source)
+        {
+            return source ?? Enumerable.Empty<T>();
+        }
+
+        private static IEnumerable<IIfcProduct> OneOrEmpty(IIfcProduct? product)
+        {
+            return product == null ? Enumerable.Empty<IIfcProduct>() : new[] { product };
+        }
+
         private class CopyContext
         {
-            public List<IIfcProduct>? PrimaryElements { get; set; }
+            public List<IIfcProduct>? PrimaryElements { get; set; } = new List<IIfcProduct>();
             public List<IIfcProduct> Decomposition { get; private set; } = new List<IIfcProduct>();
             public bool IncludeGeometry { get; set; }
         }

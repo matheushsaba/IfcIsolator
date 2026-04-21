@@ -68,7 +68,7 @@ namespace IfcIsolator
             foreach (var product in entityProducts)
             {
                 collectedProducts.Add(product);
-                if (product is IIfcSpatialStructureElement)
+                if (product is IIfcSpatialElement)
                 {
                     collectedProducts.UnionWith(GetProductHierarchyRecursively(product, collectedProducts));
                 }
@@ -79,16 +79,29 @@ namespace IfcIsolator
 
         private static HashSet<IIfcProduct> GetProductHierarchyRecursively(IIfcObjectDefinition ifcObjectDefinition, HashSet<IIfcProduct> collectedProducts)
         {
+            return GetProductHierarchyRecursively(ifcObjectDefinition, collectedProducts, new HashSet<IIfcObjectDefinition>());
+        }
+
+        private static HashSet<IIfcProduct> GetProductHierarchyRecursively(
+            IIfcObjectDefinition? ifcObjectDefinition,
+            HashSet<IIfcProduct> collectedProducts,
+            ISet<IIfcObjectDefinition> visitedDefinitions)
+        {
             if (ifcObjectDefinition == null)
             {
                 return collectedProducts;
             }
 
+            if (!visitedDefinitions.Add(ifcObjectDefinition))
+            {
+                return collectedProducts;
+            }
+
             // Only spatial elements can contain building elements
-            if (ifcObjectDefinition is IIfcSpatialStructureElement spatialElement)
+            if (ifcObjectDefinition is IIfcSpatialElement spatialElement)
             {
                 // Use IfcRelContainedInSpatialElement to retrieve contained elements
-                var containedProducts = spatialElement.ContainsElements.SelectMany(rel => rel.RelatedElements);
+                var containedProducts = OrEmpty(spatialElement.ContainsElements).SelectMany(rel => OrEmpty(rel.RelatedElements));
                 foreach (var product in containedProducts)
                 {
                     collectedProducts.Add(product);
@@ -96,13 +109,18 @@ namespace IfcIsolator
             }
 
             // Use IfcRelAggregares to get the spatial decomposition of spatial structure elements
-            var childObjectDefinitions = ifcObjectDefinition.IsDecomposedBy.SelectMany(rel => rel.RelatedObjects);
+            var childObjectDefinitions = OrEmpty(ifcObjectDefinition.IsDecomposedBy).SelectMany(rel => OrEmpty(rel.RelatedObjects));
             foreach (var childDefinition in childObjectDefinitions)
             {
-                GetProductHierarchyRecursively(childDefinition, collectedProducts);
+                GetProductHierarchyRecursively(childDefinition, collectedProducts, visitedDefinitions);
             }
 
             return collectedProducts;
+        }
+
+        private static IEnumerable<T> OrEmpty<T>(IEnumerable<T>? source)
+        {
+            return source ?? Enumerable.Empty<T>();
         }
     }
 }
