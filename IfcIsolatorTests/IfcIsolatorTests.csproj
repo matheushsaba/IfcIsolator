@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IfcIsolatorLibrary\IfcIsolatorLibrary.csproj" />
+    <ProjectReference Include="..\IfcIsolator\IfcIsolator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
