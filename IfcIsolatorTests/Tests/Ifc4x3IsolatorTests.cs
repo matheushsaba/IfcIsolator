@@ -11,7 +11,7 @@ public class Ifc4x3IsolatorTests
     private const string Ifc4x3RoadFileName = "KIT-Simple-Road-Test-Web-IFC4x3_RC2";
 
     [Fact]
-    public void Isolate_Ifc4x3()
+    public void Isolate_Pavement()
     {
         var fileName = Ifc4x3RoadFileName;
         var sourceFilePath = FileManager.GetIfcTestFilePath(FileManager.Ifc4x3FolderName, fileName);
@@ -44,9 +44,36 @@ public class Ifc4x3IsolatorTests
             containment.RelatingStructure.Name.ToString().Should().Be("Road-Carriageway-01");
         }
     }
-
+    
     [Fact]
-    public void Isolate_Ifc4x3_ExportsValidModel()
+    public void Isolate_Kerb()
+    {
+        var fileName = Ifc4x3RoadFileName;
+        var sourceFilePath = FileManager.GetIfcTestFilePath(FileManager.Ifc4x3FolderName, fileName);
+        var outputFolderPath = FileManager.GetTestFilesOutputFolderPath(FileManager.Ifc4x3FolderName);
+        var entityLabels = new int[] { 2675 };
+
+        Isolator.SplitByEntityLabels(sourceFilePath, outputFolderPath, entityLabels);
+
+        var outputFilePath = FileManager.GetIfcTestFileOutputPath(FileManager.Ifc4x3FolderName, fileName);
+        using (var resultingModel = IfcStore.Open(outputFilePath))
+        {
+            var products = resultingModel
+                .Instances
+                .OfType<IIfcProduct>()
+                .ToList();
+
+            products.Should().HaveCount(5);
+            products.Should().ContainSingle(x => x is IIfcSite);
+            products.Should().ContainSingle(x => x.GetType().Name == "IfcKerb");
+            products.Should().ContainSingle(x => x.GlobalId.ToString() == "2I54c_0nH5S8cFA5zYikNn");
+
+            resultingModel.Instances.OfType<IIfcProject>().Should().ContainSingle();
+        }
+    }
+    
+    [Fact]
+    public void Ifc4x3_ExportsValidModel()
     {
         var sourceFilePath = FileManager.GetIfcTestFilePath(FileManager.Ifc4x3FolderName, Ifc4x3RoadFileName);
         var outputFolderPath = FileManager.GetTestFilesOutputFolderPath(FileManager.Ifc4x3FolderName);

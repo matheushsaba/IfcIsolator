@@ -1,8 +1,12 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AIfcStore_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2026_002E1_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fb58dc7d5b1ff4b7da2fe41ee495cb5914d800_003Fa7_003F91418c82_003FIfcStore_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AMethodBaseInvoker_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2026_002E1_003Fresharper_002Dhost_003FSourcesCache_003F9282df70362b17ffae24d589dffe1e9bc7a730f1d7622551e6e964f_003FMethodBaseInvoker_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=63b4bfae_002Df498_002D49d3_002D9c6c_002D36d87a57c928/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Ifc4IsolatorTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc2x3IsolatorTests.Isolate_Space&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc2x3IsolatorTests.Isolate_SpaceWithElementsInside&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc4x3IsolatorTests.Isolate_Ifc4x3&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc4x3IsolatorTests.Isolate_Ifc4x3_ExportsValidModel&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4FEC5055-9370-4557-BC87-592395159CD3::net10.0::IfcIsolatorTests.Tests.Ifc4x3IsolatorTests.Isolate_Kerb&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
