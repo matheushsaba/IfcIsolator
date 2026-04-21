@@ -4,3 +4,9 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 **/TestFilesOutput/
+
+# IDE and user-specific files
+.idea/
+.vs/
+*.sln.DotSettings.user
+*.DotSettings.user
