@@ -92,6 +92,20 @@ Build only the library DLL:
 dotnet build IfcIsolator\IfcIsolator.csproj
 ```
 
+Build the AnyCPU dependency bundle:
+
+```powershell
+dotnet build IfcIsolator\IfcIsolator.csproj -c Release
+```
+
+This creates a folder containing `IfcIsolator.dll`, `IfcIsolator.deps.json`, and all resolved dependency DLLs:
+
+```text
+artifacts\IfcIsolatorDependencies\AnyCPU\Release\net10.0
+```
+
+Use the DLLs in that folder as references/dependencies from another .NET project. A single reusable class-library DLL with every dependency embedded is not the standard .NET build output; this project instead produces the library plus its dependency DLLs together in one folder.
+
 The Debug DLL is generated at:
 
 ```text
