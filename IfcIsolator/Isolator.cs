@@ -39,6 +39,8 @@ public static class Isolator
 
             using (var targetModel = IfcStore.Create(xbimEditorCredentials, ((IModel)sourceModel).SchemaVersion, XbimStoreType.EsentDatabase))
             {
+                CopyHeader(sourceModel.Header, targetModel.Header);
+
                 using (sourceModel.BeginEntityCaching())
                 using (sourceModel.BeginInverseCaching())
                 using (var txn = targetModel.BeginTransaction("InsertCopy with IfcProducts"))
@@ -52,13 +54,49 @@ public static class Isolator
 
                     txn.Commit();
                 }
-                targetModel.Header.FileDescription = sourceModel.Header.FileDescription;
-                targetModel.Header.FileName = sourceModel.Header.FileName;
-                targetModel.Header.FileSchema = sourceModel.Header.FileSchema;
-                targetModel.Header.FileName.OriginatingSystem = sourceModel.Header.FileName.OriginatingSystem;
+
                 targetModel.SaveAs(outputFilePath);
             }
         }
+    }
+
+    private static void CopyHeader(IStepFileHeader sourceHeader, IStepFileHeader targetHeader)
+    {
+        targetHeader.FileDescription = CopyFileDescription(sourceHeader.FileDescription);
+        targetHeader.FileName = CopyFileName(sourceHeader.FileName);
+        targetHeader.FileSchema = CopyFileSchema(sourceHeader.FileSchema);
+    }
+
+    private static IStepFileDescription CopyFileDescription(IStepFileDescription source)
+    {
+        return new StepFileDescription
+        {
+            Description = source.Description.ToList(),
+            ImplementationLevel = source.ImplementationLevel,
+            EntityCount = source.EntityCount,
+        };
+    }
+
+    private static IStepFileName CopyFileName(IStepFileName source)
+    {
+        return new StepFileName
+        {
+            Name = source.Name,
+            TimeStamp = source.TimeStamp,
+            AuthorName = source.AuthorName.ToList(),
+            Organization = source.Organization.ToList(),
+            PreprocessorVersion = source.PreprocessorVersion,
+            OriginatingSystem = source.OriginatingSystem,
+            AuthorizationName = source.AuthorizationName,
+            AuthorizationMailingAddress = source.AuthorizationMailingAddress.ToList(),
+        };
+    }
+
+    private static IStepFileSchema CopyFileSchema(IStepFileSchema source)
+    {
+        IStepFileSchema schema = new StepFileSchema();
+        schema.Schemas = source.Schemas.ToList();
+        return schema;
     }
 
     private static HashSet<IIfcProduct> GetProductsByEntityLabel(IModel model, IEnumerable<int> entityLabels)
