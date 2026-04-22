@@ -118,6 +118,18 @@ The Release DLL is generated at:
 IfcIsolator\bin\Release\net10.0\IfcIsolator.dll
 ```
 
+## Versioning
+
+The solution version is defined centrally in `Directory.Build.props`.
+
+Current version:
+
+```text
+2.0.0
+```
+
+When preparing a new release, update `VersionPrefix`, `AssemblyVersion`, and `FileVersion` in `Directory.Build.props`.
+
 ## Command-Line Usage
 
 The terminal project accepts the same format as before:
